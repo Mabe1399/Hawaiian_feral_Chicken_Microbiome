@@ -1,0 +1,85 @@
+# Preprocessing
+
+This is the first R markdown script focused in data preparation
+
+## Import the dataset
+
+Import the datset in our R workspace.
+
+```{r}
+# Set the path of the data directory
+path <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Data"
+
+# Set the path for Analysis output
+output <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Analysis"
+# Set the path of the Raw data
+Raw_data <- file.path(path, "Raw_Data")
+
+# Check if all the files are present
+list.files(Raw_Data)
+
+```
+
+We will further need the name of our sample.
+```{r}
+# Create also an object containing the ID numbers
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
+
+```
+
+## Data preparation
+
+The primers need to be removed. The primers used by SciLifeLab are 341F and 805R primers.
+
+```{r}
+# Set up primers object
+FWD <- "CCTACGGGNGGCWGCAG"
+REV <- "GACTACHVGGGTATCTAATCC"
+
+```
+
+To remove the primers, it is advised by SciLifeLab to use Cutadapt.
+
+Cutadapt has been set in my /bin dorectory in my case so no need to set a path
+
+```{r}
+# Set output directory for the data
+cut_output <- file.path(path, "Trimmed")
+dir.create(cut_output)
+
+# We need to create a loop to remove in every files the primer
+for (i in sample.names) {
+  system2(cutadapt, "-g", FWD, "-G", REV, 
+          "--discard-untrimmed", 
+          "-o", file.path(cut_output, "${i}.trimmed_R1.fastq.gz"),
+          "-p", file.path(cut_output, "${i}.trimmed_R2.fastq.gz"),
+          file.path(Raw_Data, "${i}_R1.fastq.gz"),
+          file.path(Raw_Data, "${i}_R2.fastq.gz"))
+}
+```
+
+After Trimming the primers we can do a Quality check using FastQC and MultiQC.
+
+## Quality check
+
+```{r}
+# Create a directory in the analysis for the quality control
+if (!dir.exists(file.path(output, "Quality_Control"))) dir.create(file.path(output, "Quality_Control"))
+
+# Run fastqc in all the samples
+system2(fastqc, "-o", file.path(output, "Quality_Control"), file.path(cut_output, "*"))
+
+# Merge them with multiqc
+system2(multiqc, file.path(output, "Quality_Control"))
+```
+
+Now That the data got prepared by removing the primers, we can go to further analysis.
+
+The entire workspace can be saved for later.
+```{r}
+# Set the path for our backup workspaces
+save <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace"
+
+# Save the workspace
+save.image( file.path(save,"Data_preparation.RData"))
+```
