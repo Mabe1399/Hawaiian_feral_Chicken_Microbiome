@@ -45,7 +45,7 @@ Cutadapt has been set in my /bin dorectory in my case so no need to set a path
 ```{r}
 # Set output directory for the data
 cut_output <- file.path(path, "Trimmed")
-dir.create(cut_output)
+if (!dir.exists(cut_output)) dir.create(cut_output)
 
 # We need to create a loop to remove in every files the primer
 for (i in sample.names) {
@@ -81,5 +81,5 @@ The entire workspace can be saved for later.
 save <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace"
 
 # Save the workspace
-save.image( file.path(save,"Data_preparation.RData"))
+save.image(file.path(save,"Data_preparation.RData"))
 ```
