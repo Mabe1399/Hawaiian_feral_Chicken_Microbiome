@@ -51,10 +51,10 @@ if (!dir.exists(cut_output)) dir.create(cut_output)
 for (i in sample.names) {
   system2(cutadapt, "-g", FWD, "-G", REV, 
           "--discard-untrimmed", 
-          "-o", file.path(cut_output, "${i}.trimmed_R1.fastq.gz"),
-          "-p", file.path(cut_output, "${i}.trimmed_R2.fastq.gz"),
-          file.path(Raw_Data, "${i}_R1.fastq.gz"),
-          file.path(Raw_Data, "${i}_R2.fastq.gz"))
+          "-o", file.path(cut_output, paste0(i,".trimmed_R1.fastq.gz")),
+          "-p", file.path(cut_output, paste0(i,".trimmed_R2.fastq.gz")),
+          file.path(Raw_Data, paste0(i,"_R1.fastq.gz")),
+          file.path(Raw_Data, paste0(i,"_R2.fastq.gz")))
 }
 ```
 
