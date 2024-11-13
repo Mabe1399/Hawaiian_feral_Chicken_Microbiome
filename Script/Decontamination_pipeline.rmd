@@ -1,0 +1,109 @@
+# Phyloseq pipeline
+
+## library
+
+```{r}
+# Analysis package
+library(phyloseq)
+library(Biostrings); packageVersion("Biostrings")
+library(decontam)
+library(ggplot2)
+library(vegan)
+```
+
+## Load Data
+
+```{r}
+load(file.path(save,"DaDa2_pipeline.RData"))
+```
+
+## Construct the phyloseq object
+
+```{r}
+# Format your Metadata
+metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Data/Bermuda and Kauai sample locations.xlsx")
+sample.out <- 
+
+#### check format AND STUFF IN TUTO
+
+# Create the ps object
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F), sample_data(), tax_table(taxa))
+
+# Reformat it
+dna <- Biostrings::DNAStringSet(taxa_names(ps))
+names(dna) <- taxa_names(ps)
+ps <- merge_phyloseq(ps, dna)
+taxa_names(ps) <- paste0("ASV", seq(ntaxa(ps)))
+ps
+```
+
+## Decontamination steps
+
+```{r}
+head(tax_table(ps)) # check
+get_taxa_unique(ps, "Family")
+get_taxa_unique(ps, "Class")
+get_taxa_unique(ps, "Order")
+
+mitochondria <- phyloseq::subset_taxa(ps, Family=="Mitochondria")
+mitochondria
+sample_sums(mitochondria)[order(sample_sums(mitochondria))]
+
+chloroplast <- subset_taxa(ps, Order=="Chloroplast")
+chloroplast
+tax_table(chloroplast)[,1:7]
+sample_sums(chloroplast)[order(sample_sums(chloroplast))]
+
+# Eukaryotes and unassigned (I don't have Eukaryotes in my samples)
+unassigned <- subset_taxa(ps, Kingdom %in% c("NA"))
+unassigned
+tax_table(unassigned)[,1:7]
+sample_sums(unassigned)[order(sample_sums(unassigned))]
+
+# filter mitochondria 
+badTaxa <- row.names(tax_table(mitochondria)[,1])
+allTaxa <- taxa_names(ps)
+goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
+ps <- prune_taxa(goodTaxa, ps)
+# filter chloroplast
+badTaxa <- row.names(tax_table(chloroplast)[,1])
+allTaxa <- taxa_names(ps)
+goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
+ps <- prune_taxa(goodTaxa, ps)
+# filter Eukaryote reads
+badTaxa <- row.names(tax_table(unassigned)[,1])
+allTaxa <- taxa_names(ps)
+goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
+ps <- prune_taxa(goodTaxa, ps)
+
+# filter zero ASVs
+table(taxa_sums(ps) < 1)
+ps
+ps <- prune_taxa(taxa_sums(ps) > 0, ps)
+```
+
+
+## Rarefaction filtering
+
+```{r}
+# Plot the rarefaction curve
+rare <- rarecurve(ps, lwd=2, ylab="OTU", label=F)
+
+# Rarefy reads
+set.seed(200)
+
+ps_rare = rarefy_even_depth(ps, sample.size = )
+
+ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
+
+```
+
+## Save the workspace
+
+```{r}
+# Erase everything not needed anymore
+keep(seqtab.nochim, taxa, save, ps, ps_rare, ps_Norm, rare, ,sure = T)
+
+# Save workspace
+save.image(file.path(save,"Decomtamination_pipeline.RData"))
+```

@@ -198,7 +198,7 @@ head(taxa.print)
 ```
 
 
-# Save the important object for further analysiy
+## Save the important object for further analysiy
 
 ```{r, eval = F}
 # Erase all objects except seqtab.nochim and taxa
