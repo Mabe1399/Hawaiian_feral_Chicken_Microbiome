@@ -6,7 +6,7 @@ This is the first R markdown script focused in data preparation
 
 Import the datset in our R workspace.
 
-```{r}
+```{r, eval = F}
 # Set the path of the data directory
 path <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Data"
 
@@ -21,7 +21,7 @@ list.files(Raw_Data)
 ```
 
 We will further need the name of our sample.
-```{r}
+```{r, eval = F}
 # Create also an object containing the ID numbers
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
 
@@ -31,7 +31,7 @@ sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
 
 The primers need to be removed. The primers used by SciLifeLab are 341F and 805R primers.
 
-```{r}
+```{r, eval = F}
 # Set up primers object
 FWD <- "CCTACGGGNGGCWGCAG"
 REV <- "GACTACHVGGGTATCTAATCC"
@@ -42,7 +42,7 @@ To remove the primers, it is advised by SciLifeLab to use Cutadapt.
 
 Cutadapt has been set in my /bin dorectory in my case so no need to set a path
 
-```{r}
+```{r, eval = F}
 # Set output directory for the data
 cut_output <- file.path(path, "Trimmed")
 if (!dir.exists(cut_output)) dir.create(cut_output)
@@ -62,7 +62,7 @@ After Trimming the primers we can do a Quality check using FastQC and MultiQC.
 
 ## Quality check
 
-```{r}
+```{r, eval = F}
 # Create a directory in the analysis for the quality control
 if (!dir.exists(file.path(output, "Quality_Control"))) dir.create(file.path(output, "Quality_Control"))
 
@@ -76,7 +76,7 @@ system2(multiqc, file.path(output, "Quality_Control"))
 Now That the data got prepared by removing the primers, we can go to further analysis.
 
 The entire workspace can be saved for later.
-```{r}
+```{r, eval = F}
 # Set the path for our backup workspaces
 save <- "/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace"
 

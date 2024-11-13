@@ -1,8 +1,8 @@
-# Phyloseq pipeline
+# Decomtamination and normalization step pipeline
 
 ## library
 
-```{r}
+```{r, eval = F}
 # Analysis package
 library(phyloseq)
 library(Biostrings); packageVersion("Biostrings")
@@ -13,13 +13,13 @@ library(vegan)
 
 ## Load Data
 
-```{r}
-load(file.path(save,"DaDa2_pipeline.RData"))
+```{r, eval = F}
+load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/DaDa2_pipeline.RData")
 ```
 
 ## Construct the phyloseq object
 
-```{r}
+```{r, eval = F}
 # Format your Metadata
 metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Data/Bermuda and Kauai sample locations.xlsx")
 sample.out <- 
@@ -39,7 +39,7 @@ ps
 
 ## Decontamination steps
 
-```{r}
+```{r, eval = F}
 head(tax_table(ps)) # check
 get_taxa_unique(ps, "Family")
 get_taxa_unique(ps, "Class")
@@ -85,7 +85,7 @@ ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 
 ## Rarefaction filtering
 
-```{r}
+```{r, eval = F}
 # Plot the rarefaction curve
 rare <- rarecurve(ps, lwd=2, ylab="OTU", label=F)
 
@@ -100,7 +100,7 @@ ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
 
 ## Save the workspace
 
-```{r}
+```{r, eval = F}
 # Erase everything not needed anymore
 keep(seqtab.nochim, taxa, save, ps, ps_rare, ps_Norm, rare, ,sure = T)
 
