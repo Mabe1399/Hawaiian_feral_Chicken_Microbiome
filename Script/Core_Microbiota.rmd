@@ -1,0 +1,64 @@
+# Create a core microbiota
+
+## library
+
+```{r, eval = F}
+library(microbiome)
+```
+
+## Load the dataset
+
+```{r, eval = F}
+load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+```
+
+## Combine and genus and species and find best hit
+
+```{r, eval = F}
+# first combine genus and species names. 
+tax_table(ps_Norm)[tax_table(ps_Norm) == "K__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "P__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "C__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "O__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "F__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "G__"] <- NA
+tax_table(ps_Norm)[tax_table(ps_Norm) == "S__"] <- NA
+
+tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))] <- gsub(tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))],  pattern = "[a-z]__", replacement = "")
+
+# Use the microbiome function add_besthit to get taxonomic identities of ASVs.
+ps_Norm_F<- microbiome::add_besthit(ps_Norm)
+
+```
+
+## Core Microbiota vizualisation
+```{r, eval =  F}
+# With compositional (relative) abundances total
+det <- c(0, 0.1, 0.5, 2, 5, 20)/100
+prevalences <- seq(.05, 1, .05)
+
+plot_core(ps_Norm_F, prevalences = prevalences, 
+          detections = det, plot.type = "lineplot") + 
+  xlab("Relative Abundance (%)") + 
+  theme_bw()
+
+# Separate the two population
+plot_core(subset_samples(ps_Norm_F, Island == "Hawaii"), prevalences = prevalences, 
+          detections = det, plot.type = "lineplot") + 
+  xlab("Relative Abundance (%)") + 
+  theme_bw()
+```
+
+## Set the threashold
+
+```{r, eval = F}
+ps_core <- core(ps_Norm_F, detection = , prevalence = )
+```
+
+## Save the new created object
+
+```{r, eval = F}
+# We save it in the same workspace than the previous because it is not a continuation it is an addition
+save.image(file.path(save,"Decomtamination_pipeline.RData"))
+```
+

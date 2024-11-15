@@ -1,0 +1,43 @@
+# Venn Diagram
+
+## Library
+
+```{r, eval = F}
+library(ggVennDiagram)
+```
+## Load the dataset
+
+```{r, eval= F}
+load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+```
+
+## Set Theme
+
+```{r, eval = F}
+theme_set(theme_bw())
+```
+
+## Venn Diagram by Island
+
+```{r, eval = F}
+# Venn diagram using all ASV
+# Creating a dataframe based on ps
+ps_df <- psmelt(ps)
+
+# Subsetting Null ASV
+ps_df<- ps_df[which (ps_df$Abundance != 0)]
+
+# Building the diagram
+ggVennDiagram(list(Cloacal = c(unique(ps_df$OTU[which(ps_df$Sample_type=="Cloacal")])), Buccal = c(unique(ps_df$OTU[which(ps_df$Sample_type == "Buccal")])), Fecal = 
+    c(unique(ps_df$OTU[which(ps_df$Sample_type == "Fecal")]))))
+```
+
+```{r, eval = F}
+# Venn diagram based on the core microbiota
+# Creating a dataframe
+ps_df_core <- psmelt(ps_Norm_f)
+
+# Building the Diagram
+ggVennDiagram(list(Cloacal = c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type=="Cloacal")])), Buccal = c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type == "Buccal")])), Fecal = 
+    c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type == "Fecal")]))))
+```

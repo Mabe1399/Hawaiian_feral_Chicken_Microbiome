@@ -53,3 +53,12 @@ plot_bar(ps_Norm, x = "Sex", fill = "species")
 plot_bar(ps_Norm, "Sex", fill = "species", facet_grid = ~island)
 ```
 
+## Relative Abundance by community
+
+```{r}
+# Look how to do it but maybe nice idea
+
+
+```
+
+
