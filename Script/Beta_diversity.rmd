@@ -1,0 +1,46 @@
+# Beta Diversity
+
+The beta diversity is the ratio between regional and local species.
+
+There is multiple way to represent it but a PCA plot is one of the most used way.
+
+Obviously multiple Metrics can be used like Bray-Curtis, Aitchinson, Jaccard, etc..
+
+## Metric conversion and different Method computation
+
+```{r, eval = F}
+# Compute all the methods in bray-curtis
+dist = "bray"
+ord_meths = c("DCA", "CCA", "RDA", "DPCoA", "NMDS", "MDS", "PCoA")
+plist = llply(as.list(ord_meths), function(i, physeq, dist){
+        ordi = ordinate(physeq, method=i, distance=dist)
+        plot_ordination(physeq, ordi, "samples", color="SampleType")
+}, ps_Norm, dist)
+
+names(plist) <- ord_meths
+
+# Create a dataframe containing each method
+
+pdataframe = ldply(plist, function(x){
+    df = x$data[, 1:2]
+    colnames(df) = c("Axis_1", "Axis_2")
+    return(cbind(df, x$data))
+})
+names(pdataframe)[1] = "method"
+```
+
+## PCA plot
+
+We can then plot the different methods togheter or separately.
+
+```{r, eval = F}
+# Togheter 
+p = ggplot(pdataframe, aes(Axis_1, Axis_2, color=SampleType, shape=human, fill=SampleType))
+p = p + geom_point(size=4) + geom_polygon()
+p = p + facet_wrap(~method, scales="free")
+p = p + scale_fill_brewer(type="qual", palette="Set1")
+p = p + scale_colour_brewer(type="qual", palette="Set1")
+p
+```
+
+Finish more plots
