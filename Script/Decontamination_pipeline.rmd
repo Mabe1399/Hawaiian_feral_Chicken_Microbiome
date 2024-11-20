@@ -102,7 +102,7 @@ ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
 
 ```{r, eval = F}
 # Erase everything not needed anymore
-keep(seqtab.nochim, taxa, save, ps, ps_rare, ps_Norm, rare, ,sure = T)
+keep(seqtab.nochim, taxa, save, ps, ps_rare, ps_Norm, rare,sure = T)
 
 # Save workspace
 save.image(file.path(save,"Decomtamination_pipeline.RData"))

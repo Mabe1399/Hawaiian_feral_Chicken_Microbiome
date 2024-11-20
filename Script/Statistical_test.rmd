@@ -1,0 +1,77 @@
+# Statistical test
+
+## Load Workspace
+
+```{r, eval = F}
+load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+```
+
+There is multiple statistical test which can be realised:
+
+## Alpha diversity test
+
+### Check normal distribution
+
+By doing an histogram, a Q-Q plot or a shapiro test. You can check for normal distribution.
+
+```{r, eval = F}
+hist()
+qqplot()
+qqline()
+shapiro.test()
+```
+
+Usually microbiome data doesn't really follow normal distribution so non-parametric test are preferred.
+
+### Exctract variables
+
+### Kurskal-Wallice test
+
+The Kurskal-Wallice test is a non-parametric test for testing if samples originate from the same distribution. 
+ 
+It is used to compare two or more independant samples of equal or different sample size. 
+
+**significant results**: Indicates that at least one sample stochastically dominates one other sample (but doesn't say which one).
+
+```{r, eval = F}
+kw <- kruskal.test(Richness ~ "any variable", data = alpha_div)
+```
+
+It is a good test to start with.
+
+## Beta diversity test
+
+#### Generate distance metrics
+
+```{r, eval = F}
+# Set the distance metrics for the matrix
+ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "bray")
+
+```
+
+### Adonis test
+
+The Adonis test is a version of a PERMANOVA. It is essentially a test for difference in the between beta diversity in the sample variables.
+
+**Significant result**: Indicates difference between samples variables.
+
+```{r, eval = F}
+# Do the Adonis test based on one variables you want
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+```
+
+```{r, eval = F}
+# The Adonis test based on two variables
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable" + phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+```
+
+```{r, eval = F}
+# The Adonis test based on interation of two variables
+vegan::Adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable" * phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+```
+
+# Save the data
+
+```{r, eval = F}
+save.image(file.path(save,"Decomtamination_pipeline.RData"))
+```
