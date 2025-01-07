@@ -19,7 +19,7 @@ Because we did some data preparation before we need to first load the workspace 
 
 ```{r, eval = F}
 # Load the previous workspace
-load("/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Data_preparation.RData")
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Data_preparation.RData")
 ```
 
 But also load the packages needed in this analysis and load the data.
@@ -30,8 +30,8 @@ library(dada2)
 
 # Create lists of file directory for forward and reverse reads.
 
-fnFs <- sort(list.files(cut_output, pattern = "trimmed_R1.fastq", full.names = T))
-fnRS <- sort(list.files(cut_output, pattern = "trimmed_R2.fastq", full.names = T))
+fnFs <- sort(list.files(cut_output, pattern = "R1_001.fastq.gz", full.names = TRUE))
+fnRs <- sort(list.files(cut_output, pattern = "R2_001.fastq.gz", full.names = TRUE))
 
 # Sample names  have been extracted before so no need to do it.
 ```
@@ -57,9 +57,9 @@ First, create objects containing the directory were the output data would be kep
 
 ```{r, eval = F}
 
-filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtFs <- file.path(path, "Filtered", paste0(sample.names, "_F_filt.fastq.gz"))
 
-filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+filtRs <- file.path(path, "Filtered", paste0(sample.names, "_R_filt.fastq.gz"))
 
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
@@ -80,8 +80,10 @@ Parameter definition:
 
 `maxEE`:
 
+`truncLen`: 
+
 ```{r, eval = F }
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(240,160), 
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(260,270), 
                             maxN = 0, maxEE = c(2,2), truncQ = 2, 
                             rm.phix=TRUE, compress = TRUE, multithread = TRUE)
 
@@ -189,7 +191,7 @@ multiple database are available (Silva, etc..)
 
 ```{r, eval= F}
 Database <- file.path(output, "DADA2", "Database")
-taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.1_train_set.fa.gz"), multithread = T)
+taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.1_train_set copy.fa.gz"), multithread = T)
 
 # Inspect the taxonomic assignement
 taxa.print <- taxa
@@ -197,14 +199,16 @@ rownames(taxa.print) <- NULL
 head(taxa.print)
 ```
 
+Alternative, Use the Decipher taxonomic assignent.
 
 ```{r}
 # Load Decipher package
 library(DECIPHER)
 
+
 # Use the classifier
-dna <- DNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
-load("~/tax/IDTaxa/SILVA_SSU_r132_March2018.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
+dna <- readDNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
+load("~/DADA2/Database/SILVA_SSU_r132_March2018.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
 ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) # use all processors
 ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
 # Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
