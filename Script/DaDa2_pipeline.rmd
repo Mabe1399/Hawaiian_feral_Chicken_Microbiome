@@ -72,15 +72,15 @@ In the tutorial, they advise basic parameters has: maxN=0, truncQ=2, rm.phix=TRU
 
 Parameter definition:
 
-`maxN`:
+`maxN`: Default 0. After truncation, sequences with more than maxN Ns will be discarded. Note that dada does not allow Ns
 
-`truncQ`:
+`truncQ`: Default 2. Truncate reads at the first instance of a quality score less than or equal to truncQ.
 
-`rm.phix`:
+`rm.phix`: Default TRUE. If TRUE, discard reads that match against the phiX genome, as determined by isPhiX
 
-`maxEE`:
+`maxEE`: Default Inf (no EE filtering). After truncation, reads with higher than maxEE "expected errors" will be discarded. Expected errors are calculated from the nominal definition of the quality score: EE = sum(10^(-Q/10))
 
-`truncLen`: 
+`truncLen`: Default 0 (no truncation). Truncate reads after truncLen bases. Reads shorter than this are discarded
 
 ```{r, eval = F }
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(260,270), 
@@ -179,6 +179,9 @@ colnames(track) <- c("input", "filtered", "denoisedF",
 
 rownames(track) <- sample.names
 head(track)
+
+# Export Reads Tracking through pipeline into CSV
+write.csv(track, file= file.path(output, "DADA2/Hawaiian_Chicken_DADA2_track_reads.csv"))
 ```
 
 ## Assign Taxonomy
@@ -191,41 +194,28 @@ multiple database are available (Silva, etc..)
 
 ```{r, eval= F}
 Database <- file.path(output, "DADA2", "Database")
-taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.1_train_set copy.fa.gz"), multithread = T)
+taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.2_toSpecies_trainset.fa.gz"), multithread = T)
+
+
 
 # Inspect the taxonomic assignement
 taxa.print <- taxa
 rownames(taxa.print) <- NULL
 head(taxa.print)
-```
 
-Alternative, Use the Decipher taxonomic assignent.
+# Check percentage of assignement by level.
 
-```{r}
-# Load Decipher package
-library(DECIPHER)
+stat <- as.matrix(colSums(is.na(taxa.print))/19585*100)
+colnames(stat) <- "Percentage"
 
-
-# Use the classifier
-dna <- readDNAStringSet(getSequences(seqtab.nochim)) # Create a DNAStringSet from the ASVs
-load("~/DADA2/Database/SILVA_SSU_r132_March2018.RData") # CHANGE TO THE PATH OF YOUR TRAINING SET
-ids <- IdTaxa(dna, trainingSet, strand="top", processors=NULL, verbose=FALSE) # use all processors
-ranks <- c("domain", "phylum", "class", "order", "family", "genus", "species") # ranks of interest
-# Convert the output object of class "Taxa" to a matrix analogous to the output from assignTaxonomy
-taxid <- t(sapply(ids, function(x) {
-        m <- match(ranks, x$rank)
-        taxa <- x$taxon[m]
-        taxa[startsWith(taxa, "unclassified_")] <- NA
-        taxa
-}))
-colnames(taxid) <- ranks; rownames(taxid) <- getSequences(seqtab.nochim)
+stat
 ```
 
 ## Save the important object for further analysiy
 
 ```{r, eval = F}
 # Erase all objects except seqtab.nochim and taxa
-keep(seqtab.nochim, taxa, save, sure = T)
+rm(list = ls()[!(ls() %in% c("seqtab.nochim","taxa","save"))])
 
 # Save the workspace
 save.image(file.path(save,"DaDa2_pipeline.RData"))

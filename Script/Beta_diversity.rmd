@@ -6,15 +6,21 @@ There is multiple way to represent it but a PCA plot is one of the most used way
 
 Obviously multiple Metrics can be used like Bray-Curtis, Aitchinson, Jaccard, etc..
 
+```{r}
+# Library
+library("plyr"); packageVersion("plyr")
+```
+
+
 ## Metric conversion and different Method computation
 
 ```{r, eval = F}
 # Compute all the methods in bray-curtis
-dist = "bray"
-ord_meths = c("DCA", "CCA", "RDA", "DPCoA", "NMDS", "MDS", "PCoA")
+dist = "jaccard"
+ord_meths = c("NMDS", "PCoA", "MDS")
 plist = llply(as.list(ord_meths), function(i, physeq, dist){
         ordi = ordinate(physeq, method=i, distance=dist)
-        plot_ordination(physeq, ordi, "samples", color="SampleType")
+        plot_ordination(physeq, ordi, "samples")
 }, ps_Norm, dist)
 
 names(plist) <- ord_meths
@@ -23,7 +29,7 @@ names(plist) <- ord_meths
 
 pdataframe = ldply(plist, function(x){
     df = x$data[, 1:2]
-    colnames(df) = c("Axis_1", "Axis_2")
+    colnames(df) = c("PC1", "PC2")
     return(cbind(df, x$data))
 })
 names(pdataframe)[1] = "method"
@@ -35,8 +41,8 @@ We can then plot the different methods togheter or separately.
 
 ```{r, eval = F}
 # Togheter 
-p = ggplot(pdataframe, aes(Axis_1, Axis_2, color=SampleType, shape=human, fill=SampleType))
-p = p + geom_point(size=4) + geom_polygon()
+p = ggplot(pdataframe, aes(PC1, PC2))
+p = p + geom_point(size=2) #geom_polygon()
 p = p + facet_wrap(~method, scales="free")
 p = p + scale_fill_brewer(type="qual", palette="Set1")
 p = p + scale_colour_brewer(type="qual", palette="Set1")

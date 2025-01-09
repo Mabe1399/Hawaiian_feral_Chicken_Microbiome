@@ -14,7 +14,7 @@ library(vegan)
 ## Load Data
 
 ```{r, eval = F}
-load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/DaDa2_pipeline.RData")
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/DaDa2_pipeline.RData")
 ```
 
 ## Construct the phyloseq object
@@ -27,7 +27,7 @@ sample.out <-
 #### check format AND STUFF IN TUTO
 
 # Create the ps object
-ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F), sample_data(), tax_table(taxa))
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F), tax_table(taxa))
 
 # Reformat it
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
@@ -55,7 +55,7 @@ tax_table(chloroplast)[,1:7]
 sample_sums(chloroplast)[order(sample_sums(chloroplast))]
 
 # Eukaryotes and unassigned (I don't have Eukaryotes in my samples)
-unassigned <- subset_taxa(ps, Kingdom %in% c("NA"))
+unassigned <- subset_taxa(ps,is.na(Kingdom))
 unassigned
 tax_table(unassigned)[,1:7]
 sample_sums(unassigned)[order(sample_sums(unassigned))]
@@ -83,16 +83,20 @@ ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 ```
 
 
-## Rarefaction filtering
+## Rarefaction filtering (Will check if possible)
 
 ```{r, eval = F}
 # Plot the rarefaction curve
-rare <- rarecurve(ps, lwd=2, ylab="OTU", label=F)
+ps_rarecurve <- prune_samples(sample_sums(ps)<=10000, ps)
+
+tab <- otu_table(ps_rarecurve)
+class(tab) <- "matrix"
+rare <- rarecurve(tab, step= 10000, lwd =2, ylab="OTU", label=F)
 
 # Rarefy reads
 set.seed(200)
 
-ps_rare = rarefy_even_depth(ps, sample.size = )
+ps_rare = rarefy_even_depth(ps, sample.size = 5573)
 
 ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
 
@@ -102,7 +106,7 @@ ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
 
 ```{r, eval = F}
 # Erase everything not needed anymore
-keep(seqtab.nochim, taxa, save, ps, ps_rare, ps_Norm, rare,sure = T)
+rm(list = ls()[!(ls() %in% c("seqtab.nochim","taxa","save","ps", "ps_rare","ps_Norm", "rare"))])
 
 # Save workspace
 save.image(file.path(save,"Decomtamination_pipeline.RData"))
