@@ -72,12 +72,12 @@ ggplot(barplot_phylum, aes(x = Sample, y=Abundance, order = Phylum)) +
   # coord_flip() + # comment out this line if you want vertical bars
   #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
   #theme(axis.title.x = element_text(size=13), 
-        axis.title.y = element_text(size=13),
-        axis.text.y = element_text(size=12, color ="black"), 
-        axis.text.x = element_text(size=6)) +
+        #axis.title.y = element_text(size=13),
+        #axis.text.y = element_text(size=12, color ="black"), 
+        #axis.text.x = element_text(size=6)) +
   #theme(legend.title = element_text(size=14), 
-        legend.text = element_text(size=12),
-        legend.key.size=unit(0.7,"cm") ) +
+        #legend.text = element_text(size=12),
+        #legend.key.size=unit(0.7,"cm") ) +
   #theme(axis.text.x = element_text(angle = 90)) +
   #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
   #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
