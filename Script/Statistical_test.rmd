@@ -25,6 +25,17 @@ Usually microbiome data doesn't really follow normal distribution so non-paramet
 
 ### Exctract variables
 
+```{r}
+rich = estimate_richness(ps_rare)
+
+alpha_div <- sample_data(ps_rare)
+
+alpha_div$Richness <- rich$Observed
+
+alpha_div <- as.matrix(alpha_div)
+
+```
+
 ### Kurskal-Wallice test
 
 The Kurskal-Wallice test is a non-parametric test for testing if samples originate from the same distribution. 
@@ -34,7 +45,8 @@ It is used to compare two or more independant samples of equal or different samp
 **significant results**: Indicates that at least one sample stochastically dominates one other sample (but doesn't say which one).
 
 ```{r, eval = F}
-kw <- kruskal.test(Richness ~ "any variable", data = alpha_div)
+kw <- kruskal.test(Richness ~ Island, data = alpha_div)
+kw
 ```
 
 It is a good test to start with.
@@ -57,17 +69,17 @@ The Adonis test is a version of a PERMANOVA. It is essentially a test for differ
 
 ```{r, eval = F}
 # Do the Adonis test based on one variables you want
-vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island, permutations = 999)
 ```
 
 ```{r, eval = F}
 # The Adonis test based on two variables
-vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable" + phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island + phyloseq::sample_data(ps_Norm)$Sex, permutations = 999)
 ```
 
 ```{r, eval = F}
 # The Adonis test based on interation of two variables
-vegan::Adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$"variable" * phyloseq::sample_data(ps_Norm)$"variable", permutations = 999)
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island * phyloseq::sample_data(ps_Norm)$Sex, permutations = 999)
 ```
 
 # Save the data

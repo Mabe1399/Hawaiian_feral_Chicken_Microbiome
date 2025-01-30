@@ -25,7 +25,8 @@ tax_table(ps_Norm)[tax_table(ps_Norm) == "G__"] <- NA
 tax_table(ps_Norm)[tax_table(ps_Norm) == "S__"] <- NA
 
 tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))] <- gsub(tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))],  pattern = "[a-z]__", replacement = "")
-
+# Change name of taxonomic levels
+colnames(tax_table(ps_Norm)) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 # Use the microbiome function add_besthit to get taxonomic identities of ASVs.
 ps_Norm_F<- microbiome::add_besthit(ps_Norm)
 
@@ -34,7 +35,7 @@ ps_Norm_F<- microbiome::add_besthit(ps_Norm)
 ## Core Microbiota vizualisation
 ```{r, eval =  F}
 # With compositional (relative) abundances total
-det <- c(0, 0.1, 0.5, 2, 5, 20)/100
+det <- round(10^seq(log10(0.001), log10(.3), length = 15), 3)
 prevalences <- seq(.05, 1, .05)
 
 plot_core(ps_Norm_F, prevalences = prevalences, 
@@ -43,10 +44,29 @@ plot_core(ps_Norm_F, prevalences = prevalences,
   theme_bw()
 
 # Separate the two population
-plot_core(subset_samples(ps_Norm_F, Island == "Hawaii"), prevalences = prevalences, 
+plot_core(subset_samples(ps_Norm_F, Island == "Bahamas"), prevalences = prevalences, 
           detections = det, plot.type = "lineplot") + 
   xlab("Relative Abundance (%)") + 
   theme_bw()
+```
+# Core heatmaps
+```{r}
+# Core with compositionals:
+prevalences <- seq(.05, 1, .05)
+detections <- round(10^seq(log10(0.001), log10(.3), length = 15), 3)
+
+
+gray <- gray(seq(0,1,length=5))
+
+p1 <- plot_core(ps_Norm_F,
+  plot.type = "heatmap",
+  colours = gray,
+  prevalences = prevalences,
+  detections = detections, min.prevalence = .5) +
+  xlab("Detection Threshold (Relative Abundance (%))")
+
+p1 <- p1 + theme_bw() + ylab("ASVs")
+p1
 ```
 
 ## Set the threashold

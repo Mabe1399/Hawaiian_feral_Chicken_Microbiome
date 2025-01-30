@@ -9,6 +9,7 @@ library(Biostrings); packageVersion("Biostrings")
 library(decontam)
 library(ggplot2)
 library(vegan)
+library(tidyverse)
 ```
 
 ## Load Data
@@ -21,13 +22,34 @@ load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/H
 
 ```{r, eval = F}
 # Format your Metadata
-metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Data/Bermuda and Kauai sample locations.xlsx")
-sample.out <- 
+metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/Metadata_Chicken.csv", na= "NA")
 
-#### check format AND STUFF IN TUTO
+# Remove NA Rows
+metadata <- metadata[!is.na(metadata$Sample.Name),]
+
+# Add Island Column
+metadata$Island <- with(metadata, ifelse(grepl("B", metadata$Sample.ID,fixed = T), "Bahamas", "Kauai"))
+
+# Change value for Sample Type
+metadata$Sample.Type <- replace(metadata$Sample.Type, metadata$Sample.Type=="Fecal", "Cecum")
+
+# Change the Sex column
+metadata$Sex <- with(metadata, ifelse(grepl("f", metadata$Sex,ignore.case = T, fixed = T), "Female", "Male"))
+
+# Sort by sample Name
+metadata <- metadata[order(metadata$Sample.Name),]
+
+# Because some duplicates in the Samples remove them from Seqtab
+seqtab.nochim <- seqtab.nochim[!(row.names(seqtab.nochim) %in% c("103", "318")), ]
+
+# Change row Names
+rownames(metadata) <- rownames(seqtab.nochim)
+
+# Remove Sample Name
+metadata <- metadata[-c(1)]
 
 # Create the ps object
-ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F), tax_table(taxa))
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F),sample_data(metadata), tax_table(taxa))
 
 # Reformat it
 dna <- Biostrings::DNAStringSet(taxa_names(ps))

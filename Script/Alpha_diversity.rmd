@@ -13,16 +13,29 @@ Plot Alpha diversity using the three different metrics.
 plot_richness(ps_rare, x = "samples", measures = c("Observed", "Shannon", "Simpson"))
 ```
 
+```{r}
+
+```
+
 It is possible to separate by different categories than only Samples
 
 ```{r, eval = F}
 # By Islands
-plot_richness(ps_rare, x = "Islands", measures = c("Observed", "Shannon", "Simpson", color = "Island"))
+plot_richness(ps_rare, x = "Island", measures = c("Observed", "Shannon", "Simpson", color = "Island"))
+```
+```{r}
+# By Sex
+plot_richness(ps_rare, x = "Sex", measures = c("Observed", "Shannon", "Simpson"), color = "Sex")
+```
+
+```{r}
+# By Sample Type
+plot_richness(ps_rare, x = "Sample.Type", measures = c("Observed", "Shannon", "Simpson"), color = "Sample.Type")
 ```
 
 ```{r, eval = F }
 # By Communities
-plot_richness(ps_rare, x = "Communities", measures = c("Obserced", "Shannon", "Simpson"), color = "Communities")
+plot_richness(ps_rare, x = "Communities", measures = c("Observed", "Shannon", "Simpson"), color = "Communities")
 ```
 
 
@@ -31,17 +44,107 @@ plot_richness(ps_rare, x = "Communities", measures = c("Obserced", "Shannon", "S
 We can also represent it in Box-plots
 
 ```{r, eval = F}
-Boxplot <- plot_richness(ps_rare, x = "sample", measures = "Observed")
+# Boxplot By Island
+Boxplot <- plot_richness(ps_rare, x = "Island", measures = "Observed")
 
-ggplot(Boxplot$data, aes(x = sample , y = value, fill = sample)) + 
-  geom_violin() +
-  geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) + 
+ggplot(Boxplot$data, aes(x = Island , y = value, fill = Island)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
   geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
-  ylab("Richness") + xlab("Island") + theme_bw() + 
+  ylab("Richness") + xlab("Island") 
+  #theme_bw() + 
   theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
   theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
   #scale_fill_manual(values = color_list[c(6,4,8)]) + 
   #scale_color_manual(values = color_list)
 ```
 
+```{r}
+# Boxplot By Sex
+Boxplot_Sex <- plot_richness(ps_rare, x = "Sex", measures = "Observed")
+
+ggplot(Boxplot_Sex$data, aes(x = Sex , y = value, fill = Sex)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Richness") + xlab("Sex") 
+```
+
+```{r}
+# Boxplot By Sample Type
+Boxplot_Type <- plot_richness(ps_rare, x = "Sample.Type", measures = "Observed")
+
+ggplot(Boxplot_Type$data, aes(x = Sample.Type , y = value, fill = Sample.Type)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Richness") + xlab("Sample Type") 
+```
+
+# Alpha-diversity eveness
+
+```{r, eval = F}
+library("microbiome")
+# By Samples
+p <- microbiome::evenness(otu_table(ps_rare))
+p
+
+# Create Matrix with eveness value
+evenness_Box <- sample_data(ps_rare)
+
+evenness_Box$simpson <- p$simpson
+
+evenness_div <- as.matrix(evenness_Box)
+# Boxplot By Island
+
+
+ggplot(evenness_Box, aes(x = Island , y = simpson, fill = Island)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Evenness") + xlab("Island") 
+  #theme_bw() + 
+  theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
+  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  #scale_fill_manual(values = color_list[c(6,4,8)]) + 
+  #scale_color_manual(values = color_list)
+```
+
+```{r}
+# Boxplot By Sex
+
+
+ggplot(evenness_Box, aes(x = Sex , y = simpson, fill = Sex)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Evenness") + xlab("Island") 
+  #theme_bw() + 
+  theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
+  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  #scale_fill_manual(values = color_list[c(6,4,8)]) + 
+  #scale_color_manual(values = color_list)
+```
+
+```{r}
+# Boxplot By Sex
+
+
+ggplot(evenness_Box, aes(x = Sample.Type , y = simpson, fill = Sample.Type)) +
+  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  geom_boxplot(width= 0.2, fill = "white") +
+ #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Evenness") + xlab("Island") 
+  #theme_bw() + 
+  theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
+  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  #scale_fill_manual(values = color_list[c(6,4,8)]) + 
+  #scale_color_manual(values = color_list)
+```
 
