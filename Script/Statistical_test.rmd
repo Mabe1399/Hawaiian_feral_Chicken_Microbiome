@@ -57,7 +57,7 @@ It is a good test to start with.
 
 ```{r, eval = F}
 # Set the distance metrics for the matrix
-ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "bray")
+ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "unifrac", weighted = F)
 
 ```
 

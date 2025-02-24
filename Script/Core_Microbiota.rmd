@@ -9,7 +9,7 @@ library(microbiome)
 ## Load the dataset
 
 ```{r, eval = F}
-load("/Users/matiasbeckerburgos/Master in Bioinformatics /Master Thesis /Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
 ```
 
 ## Combine and genus and species and find best hit
@@ -72,7 +72,7 @@ p1
 ## Set the threashold
 
 ```{r, eval = F}
-ps_core <- core(ps_Norm_F, detection = , prevalence = )
+ps_core <- core(ps_Norm_F, detection = 0.005, prevalence = 0.0025)
 ```
 
 ## Save the new created object

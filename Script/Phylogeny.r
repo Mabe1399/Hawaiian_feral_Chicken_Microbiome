@@ -25,4 +25,6 @@ Treefile <- file.path(Phylogeny, "ASV.mafft.trimal.treefile")
 
 Tree <- ape::read.tree(Treefile)
 
-ps_rare2 <- merge_phyloseq(ps_rare, Tree)
+ps_rare <- merge_phyloseq(ps_rare, Tree)
+
+ps_Norm <- merge_phyloseq(ps_Norm, Tree)

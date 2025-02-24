@@ -1,0 +1,43 @@
+# Phenotypical trait DATA preparation
+
+This Script is made top create the Dataframe, which is gonna be used in the GWAS.
+
+The Dataframe will contain:
+- Richness
+- Eveness
+- Beta-div (PC axis)
+- Relative Abundance of most prevalent bacteria
+
+## Create the dataframe
+
+```{r, eval = F}
+# Create the dataframe by adding the richness and eveness
+# Richness
+rich = estimate_richness(ps_rare)
+Chicken_microbiome_pheno <- as.data.frame(rich$Observed, row.names = c(sample_names(ps_rare)))
+Chicken_microbiome_pheno$Shannon <- rich$Shannon
+
+# Eveness
+p <- microbiome::evenness(otu_table(ps_rare))
+Chicken_microbiome_pheno$Eveness <- p$simpson
+
+# Principal componant of beta div
+ord_ps_core <- ordinate(ps_core, "PCoA", "bray")
+Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, ord_ps_core$vectors[,1:5])
+
+# Relative abundance of the set core microbiome
+Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, otu_table(ps_core))
+
+# Format the 0 value in NA ?
+Chicken_microbiome_pheno[Chicken_microbiome_pheno == 0] <- NA
+
+# Log transformation
+
+```
+
+## Save the new created object
+
+```{r, eval = F}
+# We save it in the same workspace than the previous because it is not a continuation it is an addition
+save.image(file.path(save,"GWAS_Data.RData"))
+```
