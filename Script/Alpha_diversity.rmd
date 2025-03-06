@@ -52,7 +52,7 @@ ggplot(Boxplot$data, aes(x = Island , y = value, fill = Island)) +
   geom_boxplot(width= 0.2, fill = "white") +
  #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
   geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
-  ylab("Richness") + xlab("Island") 
+  ylab("Richness") + xlab("Island")
   #theme_bw() + 
   theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
   theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +

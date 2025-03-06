@@ -36,7 +36,6 @@ ggVennDiagram(list(Bahamas = c(unique(ps_df$OTU[which(ps_df$Island=="Bahamas")])
 # Creating a dataframe
 ps_df_core <- psmelt(ps_core)
 
-# Building the Diagram
-ggVennDiagram(list(Cloacal = c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type=="Cloacal")])), Buccal = c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type == "Buccal")])), Fecal = 
-    c(unique(ps_df_core$OTU[which(ps_df_core$Sample_type == "Fecal")]))))
+# Building the diagram
+ggVennDiagram(list(Bahamas = c(unique(ps_df_core$OTU[which(ps_df_core$Island=="Bahamas")])), Kauai = c(unique(ps_df_core$OTU[which(ps_df_core$Island == "Kauai")]))))
 ```

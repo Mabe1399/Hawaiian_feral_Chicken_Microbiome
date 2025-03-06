@@ -14,7 +14,7 @@ path <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesi
 output <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis"
 
 # Set the path of the Raw data
-Raw_data <- file.path(path, "Raw_Data")
+Raw_data <- file.path(path, "Raw_Data/Run2")
 
 # Check if all the files are present
 list.files(Raw_data)
@@ -49,7 +49,7 @@ Cutadapt has been set in my /bin dorectory in my case so no need to set a path
 
 ```{r, eval = F}
 # Set output directory for the data
-cut_output <- file.path(path, "Trimmed")
+cut_output <- file.path(path, "Trimmed/RUN1")
 if (!dir.exists(cut_output)) dir.create(cut_output)
 
 # Set path for the output file
@@ -57,11 +57,11 @@ fnFs_cut <- file.path(cut_output, basename(fnFs))
 fnRs_cut <- file.path(cut_output, basename(fnRs))
 
 # Check the cutadapt version
-system2("cutadapt", args = "--version")
+system2("/opt/anaconda3/bin/cutadapt", args = "--version")
 
 # We need to create a loop to remove in every files the primer
 for (i in seq_along(fnFs)) {
-  system2("cutadapt", 
+  system2("/opt/anaconda3/bin/cutadapt", 
           args = c("-g", FWD, "-G", REV, 
           "--discard-untrimmed", 
           "-o", fnFs_cut[i], "-p", fnRs_cut[i],

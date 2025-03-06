@@ -57,9 +57,9 @@ First, create objects containing the directory were the output data would be kep
 
 ```{r, eval = F}
 
-filtFs <- file.path(path, "Filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtFs <- file.path(path, "Filtered/RUN1", paste0(sample.names, "_F_filt.fastq.gz"))
 
-filtRs <- file.path(path, "Filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+filtRs <- file.path(path, "Filtered/RUN1", paste0(sample.names, "_R_filt.fastq.gz"))
 
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
@@ -149,18 +149,27 @@ dim(seqtab)
 table(nchar(getSequences(seqtab)))
 ```
 
+## Merge the dataset
+
+In this step because we have two Dataset we merge them for downstream analysis.
+
+```{r, eval = F}
+# Combine the seqtab from the two runs
+Combined_seqtab <- mergeSequenceTables(seqtab, seqtab2, repeats = "sum")
+```
+
 ## Remove Chimeras
 
 This is a important step
 
 ```{r , eval = F}
-seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread= T, verbose = T)
+seqtab.nochim <- removeBimeraDenovo(Combined_seqtab, method = "consensus", multithread= T, verbose = T)
 
 # Check dimension
 dim(seqtab.nochim)
 
 # Check chimera frequency
-sum(seqtab.nochim)/sum(seqtab)
+sum(seqtab.nochim)/sum(Combined_seqtab)
 ```
 
 After removing chimera, you should still have a lot of reads (most of them) if it is not the case check upstream steps.
@@ -205,7 +214,7 @@ head(taxa.print)
 
 # Check percentage of assignement by level.
 
-stat <- as.matrix(colSums(is.na(taxa.print))/19585*100)
+stat <- as.matrix(colSums(is.na(taxa.print))/28896*100)
 colnames(stat) <- "Percentage"
 
 stat

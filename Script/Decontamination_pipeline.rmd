@@ -34,13 +34,13 @@ metadata$Island <- with(metadata, ifelse(grepl("B", metadata$Sample.ID,fixed = T
 metadata$Sample.Type <- replace(metadata$Sample.Type, metadata$Sample.Type=="Fecal", "Cecum")
 
 # Change the Sex column
-metadata$Sex <- with(metadata, ifelse(grepl("f", metadata$Sex,ignore.case = T, fixed = T), "Female", "Male"))
+metadata$Sex <- with(metadata, ifelse(grepl("f", metadata$Sex, ignore.case = T, fixed = T), "Female", "Male")) # nolint: T_and_F_symbol_linter.
 
 # Sort by sample Name
 metadata <- metadata[order(metadata$Sample.Name),]
 
 # Because some duplicates in the Samples remove them from Seqtab
-seqtab.nochim <- seqtab.nochim[!(row.names(seqtab.nochim) %in% c("103", "318")), ]
+seqtab.nochim <- seqtab.nochim[!(row.names(seqtab.nochim) %in% c("157", "365")), ]
 
 # Change row Names
 rownames(metadata) <- rownames(seqtab.nochim)
@@ -118,7 +118,7 @@ rare <- rarecurve(tab, step= 10000, lwd =2, ylab="OTU", label=F)
 # Rarefy reads
 set.seed(200)
 
-ps_rare = rarefy_even_depth(ps, sample.size = 5573)
+ps_rare = rarefy_even_depth(ps, sample.size = 23603)
 
 ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
 
