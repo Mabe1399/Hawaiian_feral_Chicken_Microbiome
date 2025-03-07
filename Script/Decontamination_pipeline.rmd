@@ -5,7 +5,8 @@
 ```{r, eval = F}
 # Analysis package
 library(phyloseq)
-library(Biostrings); packageVersion("Biostrings")
+library(Biostrings)
+packageVersion("Biostrings")
 library(decontam)
 library(ggplot2)
 library(vegan)
@@ -22,22 +23,22 @@ load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/H
 
 ```{r, eval = F}
 # Format your Metadata
-metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/Metadata_Chicken.csv", na= "NA")
+metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/Metadata_Chicken.csv", na = "NA")
 
 # Remove NA Rows
-metadata <- metadata[!is.na(metadata$Sample.Name),]
+metadata <- metadata[!is.na(metadata$Sample.Name), ]
 
 # Add Island Column
-metadata$Island <- with(metadata, ifelse(grepl("B", metadata$Sample.ID,fixed = T), "Bahamas", "Kauai"))
+metadata$Island <- with(metadata, ifelse(grepl("B", metadata$Sample.ID, fixed = T), "Bahamas", "Kauai"))
 
 # Change value for Sample Type
-metadata$Sample.Type <- replace(metadata$Sample.Type, metadata$Sample.Type=="Fecal", "Cecum")
+metadata$Sample.Type <- replace(metadata$Sample.Type, metadata$Sample.Type == "Fecal", "Cecum")
 
 # Change the Sex column
 metadata$Sex <- with(metadata, ifelse(grepl("f", metadata$Sex, ignore.case = T, fixed = T), "Female", "Male")) # nolint: T_and_F_symbol_linter.
 
 # Sort by sample Name
-metadata <- metadata[order(metadata$Sample.Name),]
+metadata <- metadata[order(metadata$Sample.Name), ]
 
 # Because some duplicates in the Samples remove them from Seqtab
 seqtab.nochim <- seqtab.nochim[!(row.names(seqtab.nochim) %in% c("157", "365")), ]
@@ -49,7 +50,7 @@ rownames(metadata) <- rownames(seqtab.nochim)
 metadata <- metadata[-c(1)]
 
 # Create the ps object
-ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows= F),sample_data(metadata), tax_table(taxa))
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows = F), sample_data(metadata), tax_table(taxa))
 
 # Reformat it
 dna <- Biostrings::DNAStringSet(taxa_names(ps))
@@ -67,33 +68,33 @@ get_taxa_unique(ps, "Family")
 get_taxa_unique(ps, "Class")
 get_taxa_unique(ps, "Order")
 
-mitochondria <- phyloseq::subset_taxa(ps, Family=="Mitochondria")
+mitochondria <- phyloseq::subset_taxa(ps, Family == "Mitochondria")
 mitochondria
 sample_sums(mitochondria)[order(sample_sums(mitochondria))]
 
-chloroplast <- subset_taxa(ps, Order=="Chloroplast")
+chloroplast <- subset_taxa(ps, Order == "Chloroplast")
 chloroplast
-tax_table(chloroplast)[,1:7]
+tax_table(chloroplast)[, 1:7]
 sample_sums(chloroplast)[order(sample_sums(chloroplast))]
 
 # Eukaryotes and unassigned (I don't have Eukaryotes in my samples)
-unassigned <- subset_taxa(ps,is.na(Kingdom))
+unassigned <- subset_taxa(ps, is.na(Kingdom))
 unassigned
-tax_table(unassigned)[,1:7]
+tax_table(unassigned)[, 1:7]
 sample_sums(unassigned)[order(sample_sums(unassigned))]
 
-# filter mitochondria 
-badTaxa <- row.names(tax_table(mitochondria)[,1])
+# filter mitochondria
+badTaxa <- row.names(tax_table(mitochondria)[, 1])
 allTaxa <- taxa_names(ps)
 goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
 ps <- prune_taxa(goodTaxa, ps)
 # filter chloroplast
-badTaxa <- row.names(tax_table(chloroplast)[,1])
+badTaxa <- row.names(tax_table(chloroplast)[, 1])
 allTaxa <- taxa_names(ps)
 goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
 ps <- prune_taxa(goodTaxa, ps)
 # filter Eukaryote reads
-badTaxa <- row.names(tax_table(unassigned)[,1])
+badTaxa <- row.names(tax_table(unassigned)[, 1])
 allTaxa <- taxa_names(ps)
 goodTaxa <- allTaxa[!(allTaxa %in% badTaxa)]
 ps <- prune_taxa(goodTaxa, ps)
@@ -109,27 +110,31 @@ ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 
 ```{r, eval = F}
 # Plot the rarefaction curve
-ps_rarecurve <- prune_samples(sample_sums(ps)<=10000, ps)
+ps_rarecurve <- prune_samples(sample_sums(ps) <= 10000, ps)
 
 tab <- otu_table(ps_rarecurve)
 class(tab) <- "matrix"
-rare <- rarecurve(tab, step= 10000, lwd =2, ylab="OTU", label=F)
+rare <- rarecurve(tab, step = 10000, lwd = 2, ylab = "OTU", label = F)
+
+# Normalize and filter low count reads
+
+ps_Norm <- transform_sample_counts(ps, function(x) {
+    x / sum(x)
+})
+ps_Norm <- filter_taxa(ps_Norm, function(x) mean(x) > 1e-5, TRUE)
 
 # Rarefy reads
 set.seed(200)
-
-ps_rare = rarefy_even_depth(ps, sample.size = 23603)
-
-ps_Norm = transform_sample_counts(ps, function(x) {x/sum(x)})
-
+ps <- prune_taxa(taxa_names(ps_Norm), ps)
+ps_rare <- rarefy_even_depth(ps, sample.size = min(sample_sums(ps)))
 ```
 
 ## Save the workspace
 
 ```{r, eval = F}
 # Erase everything not needed anymore
-rm(list = ls()[!(ls() %in% c("seqtab.nochim","taxa","save","ps", "ps_rare","ps_Norm", "rare"))])
+rm(list = ls()[!(ls() %in% c("seqtab.nochim", "taxa", "save", "ps", "ps_rare", "ps_Norm", "rare"))])
 
 # Save workspace
-save.image(file.path(save,"Decomtamination_pipeline.RData"))
+save.image(file.path(save, "Decomtamination_pipeline.RData"))
 ```

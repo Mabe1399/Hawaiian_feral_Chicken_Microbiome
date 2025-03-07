@@ -43,7 +43,7 @@ Now it is time to start.
 First we need to visualize the read quality. (In the previous part, we already do it using fastqc but it is always good to do it)
 
 ```{r, eval = F}
-plotQualityProfile(fnFs[1:2])# visualize only the two first reads
+plotQualityProfile(fnFs[1:2]) # visualize only the two first reads
 plotQualityProfile(fnRs[1:2])
 ```
 
@@ -56,14 +56,12 @@ This part is optional depending on the quality of your reads.
 First, create objects containing the directory were the output data would be kept (the directory doesn't need to exist)
 
 ```{r, eval = F}
-
 filtFs <- file.path(path, "Filtered/RUN1", paste0(sample.names, "_F_filt.fastq.gz"))
 
 filtRs <- file.path(path, "Filtered/RUN1", paste0(sample.names, "_R_filt.fastq.gz"))
 
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
-
 ```
 
 Now the actual fitering and trimming
@@ -83,9 +81,11 @@ Parameter definition:
 `truncLen`: Default 0 (no truncation). Truncate reads after truncLen bases. Reads shorter than this are discarded
 
 ```{r, eval = F }
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen = c(260,270), 
-                            maxN = 0, maxEE = c(2,2), truncQ = 2, 
-                            rm.phix=TRUE, compress = TRUE, multithread = TRUE)
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
+    truncLen = c(260, 270),
+    maxN = 0, maxEE = c(2, 2), truncQ = 2,
+    rm.phix = TRUE, compress = TRUE, multithread = TRUE
+)
 
 head(out)
 ```
@@ -99,11 +99,10 @@ errF <- learnErrors(filtFs, multithread = T)
 errR <- learnErrors(filtRs, multithread = T)
 
 
-par(mfrow = c(1,2))# Set for two plots
+par(mfrow = c(1, 2)) # Set for two plots
 
 plotErrors(errF, nominalQ = T)
 plotErrors(errR, nominalQ = T)
-
 ```
 
 This is mostly informative in case something went wrong
@@ -115,12 +114,11 @@ We apply the sample inference algorithm to the data.
 (maybe consider pooling for increase sensitivity ?)
 
 ```{r, eval = F}
+dadaFs <- dada(filtFs, err = errF, multithread = T)
 
-dadaFs <- dada(filtFs, err=errF, multithread= T)
+dadaRs <- dada(filtRs, err = errF, multithread = T)
 
-dadaRs <- dada(filtRs, err=errF, multithread = T)
-
-#Inspect the dada-class object
+# Inspect the dada-class object
 dadaFs[[1]]
 ```
 
@@ -129,8 +127,7 @@ dadaFs[[1]]
 This step merge all our samples in one data frame
 
 ```{r, eval = F}
-
-mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose= T)
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose = T)
 
 # Inspect the merger data.frame
 head(mergers[[1]])
@@ -163,13 +160,13 @@ Combined_seqtab <- mergeSequenceTables(seqtab, seqtab2, repeats = "sum")
 This is a important step
 
 ```{r , eval = F}
-seqtab.nochim <- removeBimeraDenovo(Combined_seqtab, method = "consensus", multithread= T, verbose = T)
+seqtab.nochim <- removeBimeraDenovo(Combined_seqtab, method = "consensus", multithread = T, verbose = T)
 
 # Check dimension
 dim(seqtab.nochim)
 
 # Check chimera frequency
-sum(seqtab.nochim)/sum(Combined_seqtab)
+sum(seqtab.nochim) / sum(Combined_seqtab)
 ```
 
 After removing chimera, you should still have a lot of reads (most of them) if it is not the case check upstream steps.
@@ -180,17 +177,21 @@ Check the number of read who made it through the pipeline.
 
 ```{r, eval = F}
 getN <- function(x) sum(getUniques(x))
-track <- cbind(out, sapply(dadaFs,getN), sapply(dadaRs, getN), 
-                sapply(mergers, getN), rowSums(seqtab.nochim))
+track <- cbind(
+    out, sapply(dadaFs, getN), sapply(dadaRs, getN),
+    sapply(mergers, getN), rowSums(seqtab.nochim)
+)
 
-colnames(track) <- c("input", "filtered", "denoisedF", 
-                        "denoisedR", "merged", "nonchim")
+colnames(track) <- c(
+    "input", "filtered", "denoisedF",
+    "denoisedR", "merged", "nonchim"
+)
 
 rownames(track) <- sample.names
 head(track)
 
 # Export Reads Tracking through pipeline into CSV
-write.csv(track, file= file.path(output, "DADA2/Hawaiian_Chicken_DADA2_track_reads.csv"))
+write.csv(track, file = file.path(output, "DADA2/Hawaiian_Chicken_DADA2_track_reads.csv"))
 ```
 
 ## Assign Taxonomy
@@ -204,7 +205,7 @@ multiple database are available (Silva, etc..)
 ```{r, eval= F}
 Database <- file.path(output, "DADA2", "Database")
 taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.2_toSpecies_trainset.fa.gz"), multithread = T)
-
+taxa <- addSpecies(taxa, file.path(Database, "silva_v138.2_assignSpecies.fa.gz"))
 
 
 # Inspect the taxonomic assignement
@@ -214,7 +215,7 @@ head(taxa.print)
 
 # Check percentage of assignement by level.
 
-stat <- as.matrix(colSums(is.na(taxa.print))/28896*100)
+stat <- as.matrix(colSums(is.na(taxa.print)) / 28896 * 100)
 colnames(stat) <- "Percentage"
 
 stat
@@ -224,8 +225,8 @@ stat
 
 ```{r, eval = F}
 # Erase all objects except seqtab.nochim and taxa
-rm(list = ls()[!(ls() %in% c("seqtab.nochim","taxa","save"))])
+rm(list = ls()[!(ls() %in% c("seqtab.nochim", "taxa", "save"))])
 
 # Save the workspace
-save.image(file.path(save,"DaDa2_pipeline.RData"))
+save.image(file.path(save, "DaDa2_pipeline.RData"))
 ```

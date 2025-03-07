@@ -132,7 +132,7 @@ ggplot(evenness_Box, aes(x = Sex , y = simpson, fill = Sex)) +
 ```
 
 ```{r}
-# Boxplot By Sex
+# Boxplot By Sample Type
 
 
 ggplot(evenness_Box, aes(x = Sample.Type , y = simpson, fill = Sample.Type)) +
@@ -147,4 +147,3 @@ ggplot(evenness_Box, aes(x = Sample.Type , y = simpson, fill = Sample.Type)) +
   #scale_fill_manual(values = color_list[c(6,4,8)]) + 
   #scale_color_manual(values = color_list)
 ```
-
