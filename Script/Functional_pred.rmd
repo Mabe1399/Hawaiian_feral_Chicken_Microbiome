@@ -1,0 +1,35 @@
+# Funtional prediction file creartion for Picrust2
+
+```{r, eval = F}
+# Loading
+library("readr")
+library(phyloseq)
+library(dplyr)
+```
+
+Extract the Sequence in a Fasta file and the ASV table with read count.
+
+## Exctract DNA Sequence of ASV from ps object
+```{r, eval = F}
+# Set the path
+path <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis"
+
+# Create folder for Analysis
+FuncPred <- file.path(path, "FunctionalPred/RUN1")
+if (!dir.exists(FuncPred)) dir.create(FuncPred)
+
+# Write sequence inside file
+Biostrings::writeXStringSet(refseq(ps), file.path(FuncPred, "ASV_DNA_seq_RUN1.fasta"))
+```
+
+## Exctract ASV table from ps object
+```{r, eval = F}
+# Extract the ASV table
+ASV_table <- as.data.frame(t(otu_table(ps)))
+
+# ADD ASV_ID column from row names
+ASV_table <- tibble::rownames_to_column(ASV_table, "ASV_ID")
+
+# Export to the funcPred folder
+write_tsv(ASV_table, file = file.path(FuncPred, "ASV_Table_RUN1.tsv"))
+```
