@@ -14,11 +14,10 @@ path <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesi
 output <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis"
 
 # Set the path of the Raw data
-Raw_data <- file.path(path, "Raw_Data/Run2")
+Raw_data <- file.path(path, "Raw_Data/RUN1")
 
 # Check if all the files are present
 list.files(Raw_data)
-
 ```
 
 We will further need the name of our sample.
@@ -29,7 +28,6 @@ fnRs <- sort(list.files(Raw_data, pattern = "R2_001.fastq.gz", full.names = TRUE
 
 # Create also an object containing the ID numbers
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
-
 ```
 
 ## Data preparation
@@ -40,7 +38,6 @@ The primers need to be removed. The primers used by SciLifeLab are 341F and 805R
 # Set up primers object
 FWD <- "CCTACGGGNGGCWGCAG"
 REV <- "GACTACHVGGGTATCTAATCC"
-
 ```
 
 To remove the primers, it is advised by SciLifeLab to use Cutadapt.
@@ -49,11 +46,11 @@ Cutadapt has been set in my /bin dorectory in my case so no need to set a path
 
 ```{r, eval = F}
 # Set output directory for the data
-cut_output <- file.path(path, "Trimmed/RUN1")
+cut_output <- file.path(path, "Trimmed/")
 if (!dir.exists(cut_output)) dir.create(cut_output)
 
 # Set path for the output file
-fnFs_cut <- file.path(cut_output, basename(fnFs)) 
+fnFs_cut <- file.path(cut_output, basename(fnFs))
 fnRs_cut <- file.path(cut_output, basename(fnRs))
 
 # Check the cutadapt version
@@ -61,11 +58,14 @@ system2("/opt/anaconda3/bin/cutadapt", args = "--version")
 
 # We need to create a loop to remove in every files the primer
 for (i in seq_along(fnFs)) {
-  system2("/opt/anaconda3/bin/cutadapt", 
-          args = c("-g", FWD, "-G", REV, 
-          "--discard-untrimmed", 
-          "-o", fnFs_cut[i], "-p", fnRs_cut[i],
-          fnFs[i], fnRs[i]))
+  system2("/opt/anaconda3/bin/cutadapt",
+    args = c(
+      "-g", FWD, "-G", REV,
+      "--discard-untrimmed",
+      "-o", fnFs_cut[i], "-p", fnRs_cut[i],
+      fnFs[i], fnRs[i]
+    )
+  )
 }
 
 # Check if the trimming worked
@@ -81,7 +81,7 @@ After Trimming the primers we can do a Quality check using FastQC and MultiQC.
 if (!dir.exists(file.path(output, "Quality_Control"))) dir.create(file.path(output, "Quality_Control"))
 
 # Run fastqc in all the samples
-system2("fastqc",args = c("-o", file.path(output, "Quality_Control"), file.path(cut_output, "*")))
+system2("fastqc", args = c("-o", file.path(output, "Quality_Control"), file.path(cut_output, "*")))
 
 # Merge them with multiqc
 system2("multiqc", args = c(file.path(output, "Quality_Control")))
@@ -95,5 +95,5 @@ The entire workspace can be saved for later.
 save <- "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace"
 
 # Save the workspace
-save.image(file.path(save,"Data_preparation.RData"))
+save.image(file.path(save, "Data_preparation.RData"))
 ```

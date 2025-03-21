@@ -152,7 +152,7 @@ In this step because we have two Dataset we merge them for downstream analysis.
 
 ```{r, eval = F}
 # Combine the seqtab from the two runs
-Combined_seqtab <- mergeSequenceTables(seqtab, seqtab2, repeats = "sum")
+Combined_seqtab <- mergeSequenceTables(seqtab_Blanks, seqtab.nochim, repeats = "sum")
 ```
 
 ## Remove Chimeras
@@ -160,13 +160,13 @@ Combined_seqtab <- mergeSequenceTables(seqtab, seqtab2, repeats = "sum")
 This is a important step
 
 ```{r , eval = F}
-seqtab.nochim <- removeBimeraDenovo(Combined_seqtab, method = "consensus", multithread = T, verbose = T)
+seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", multithread = T, verbose = T)
 
 # Check dimension
 dim(seqtab.nochim)
 
 # Check chimera frequency
-sum(seqtab.nochim) / sum(Combined_seqtab)
+sum(seqtab.nochim) / sum(seqtab)
 ```
 
 After removing chimera, you should still have a lot of reads (most of them) if it is not the case check upstream steps.
@@ -205,7 +205,7 @@ multiple database are available (Silva, etc..)
 ```{r, eval= F}
 Database <- file.path(output, "DADA2", "Database")
 taxa <- assignTaxonomy(seqtab.nochim, file.path(Database, "silva_nr99_v138.2_toSpecies_trainset.fa.gz"), multithread = T)
-taxa <- addSpecies(taxa, file.path(Database, "silva_v138.2_assignSpecies.fa.gz"))
+# taxa <- addSpecies(taxa, file.path(Database, "silva_v138.2_assignSpecies.fa.gz"))
 
 
 # Inspect the taxonomic assignement
@@ -228,5 +228,5 @@ stat
 rm(list = ls()[!(ls() %in% c("seqtab.nochim", "taxa", "save"))])
 
 # Save the workspace
-save.image(file.path(save, "DaDa2_pipeline.RData"))
+save.image(file.path(save, "DaDa2_pipeline_RUN1.RData"))
 ```

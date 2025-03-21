@@ -9,13 +9,13 @@ library(microbiome)
 ## Load the dataset
 
 ```{r, eval = F}
-load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN2.RData")
 ```
 
 ## Combine and genus and species and find best hit
 
 ```{r, eval = F}
-# first combine genus and species names. 
+# first combine genus and species names.
 tax_table(ps_Norm)[tax_table(ps_Norm) == "K__"] <- NA
 tax_table(ps_Norm)[tax_table(ps_Norm) == "P__"] <- NA
 tax_table(ps_Norm)[tax_table(ps_Norm) == "C__"] <- NA
@@ -24,12 +24,11 @@ tax_table(ps_Norm)[tax_table(ps_Norm) == "F__"] <- NA
 tax_table(ps_Norm)[tax_table(ps_Norm) == "G__"] <- NA
 tax_table(ps_Norm)[tax_table(ps_Norm) == "S__"] <- NA
 
-tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))] <- gsub(tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))],  pattern = "[a-z]__", replacement = "")
+tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))] <- gsub(tax_table(ps_Norm)[, colnames(tax_table(ps_Norm))], pattern = "[a-z]__", replacement = "")
 # Change name of taxonomic levels
 colnames(tax_table(ps_Norm)) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 # Use the microbiome function add_besthit to get taxonomic identities of ASVs.
-ps_Norm_F<- microbiome::add_besthit(ps_Norm)
-
+ps_Norm_F <- microbiome::add_besthit(ps_Norm)
 ```
 
 ## Core Microbiota vizualisation
@@ -38,15 +37,19 @@ ps_Norm_F<- microbiome::add_besthit(ps_Norm)
 det <- round(10^seq(log10(0.001), log10(.3), length = 15), 3)
 prevalences <- seq(.05, 1, .05)
 
-plot_core(ps_Norm_F, prevalences = prevalences, 
-          detections = det, plot.type = "lineplot") + 
-  xlab("Relative Abundance (%)") + 
+plot_core(ps_Norm_F,
+  prevalences = prevalences,
+  detections = det, plot.type = "lineplot"
+) +
+  xlab("Relative Abundance (%)") +
   theme_bw()
 
 # Separate the two population
-plot_core(subset_samples(ps_Norm_F, Island == "Bahamas"), prevalences = prevalences, 
-          detections = det, plot.type = "lineplot") + 
-  xlab("Relative Abundance (%)") + 
+plot_core(subset_samples(ps_Norm_F, Island == "Bahamas"),
+  prevalences = prevalences,
+  detections = det, plot.type = "lineplot"
+) +
+  xlab("Relative Abundance (%)") +
   theme_bw()
 ```
 # Core heatmaps
@@ -56,29 +59,34 @@ prevalences <- seq(.05, 1, .05)
 detections <- round(10^seq(log10(0.001), log10(.3), length = 15), 3)
 
 
-gray <- gray(seq(0,1,length=5))
+gray <- gray(seq(0, 1, length = 5))
 
 p1 <- plot_core(ps_Norm_F,
   plot.type = "heatmap",
   colours = gray,
   prevalences = prevalences,
-  detections = detections, min.prevalence = .5) +
+  detections = detections, min.prevalence = .5
+) +
   xlab("Detection Threshold (Relative Abundance (%))")
 
 p1 <- p1 + theme_bw() + ylab("ASVs")
 p1
 ```
 
-## Set the threashold
+## Set the threashold + Normalize to relative abundance
 
 ```{r, eval = F}
+# Set the threashold for the nbr of ASV you want to keep
 ps_core <- core(ps_Norm_F, detection = 0.005, prevalence = 0.0025)
+
+# Normalize to relative Abundance again
+ps_core <- transform_sample_counts(ps_core, function(x) x / sum(x))
 ```
 
 ## Save the new created object
 
 ```{r, eval = F}
 # We save it in the same workspace than the previous because it is not a continuation it is an addition
-save.image(file.path(save,"Decomtamination_pipeline.RData"))
+save.image(file.path(save, "Decomtamination_pipeline_RUN2.RData"))
 ```
 

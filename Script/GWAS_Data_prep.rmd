@@ -8,13 +8,22 @@ The Dataframe will contain:
 - Beta-div (PC axis)
 - Relative Abundance of most prevalent bacteria
 
-## Create the dataframe
+```{r , eval = F}
+library(readr)
+```
+
+## Create the Phenotype dataframe
 
 ```{r, eval = F}
+# Add ID first
+Chicken_microbiome_pheno <- as.data.frame(metadata$ID, row.names = c(sample_names(ps_rare)))
+colnames(Chicken_microbiome_pheno) <- c("ID")
+# Add Sample Type as a possible covariate
+Chicken_microbiome_pheno$Sample.Type <- metadata$Sample.Type
 # Create the dataframe by adding the richness and eveness
 # Richness
-rich = estimate_richness(ps_rare)
-Chicken_microbiome_pheno <- as.data.frame(rich$Observed, row.names = c(sample_names(ps_rare)))
+rich <- estimate_richness(ps_rare)
+Chicken_microbiome_pheno$Richness <- rich$Observed
 Chicken_microbiome_pheno$Shannon <- rich$Shannon
 
 # Eveness
@@ -23,7 +32,7 @@ Chicken_microbiome_pheno$Eveness <- p$simpson
 
 # Principal componant of beta div
 ord_ps_core <- ordinate(ps_core, "PCoA", "bray")
-Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, ord_ps_core$vectors[,1:5])
+Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, ord_ps_core$vectors[, 1:5])
 
 # Relative abundance of the set core microbiome
 Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, otu_table(ps_core))
@@ -32,12 +41,57 @@ Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, otu_table(ps_core))
 Chicken_microbiome_pheno[Chicken_microbiome_pheno == 0] <- NA
 
 # Log transformation
-
 ```
 
+## Single-Trait (And multiple trait) GWAS Analysis Data
+```{r, eval = F}
+# Load the data file
+feral_covariates_microbiome <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_Covariate/feral_covariates_microbiome.txt")
+
+# Reformat
+feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, feral_covariates_microbiome$Island == "kauai", "Kauai")
+feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, is.na(feral_covariates_microbiome$Island), "Kauai")
+# Merge the dataset (full)
+feral_covariates_microbiome_RUN1_FULL <- merge(Chicken_microbiome_pheno, feral_covariates_microbiome, by = "ID")
+
+# Merge the dataset (Richness only)
+feral_covariates_microbiome_RUN1_Richness <- merge(Chicken_microbiome_pheno[1:3], feral_covariates_microbiome, by = "ID")
+```
+
+## Create an ID list for Genome dataset filtering
+```{r, eval = F}
+ID_feral <- as.data.frame(feral_covariates_microbiome_RUN1_FULL$ID)
+
+write_delim(ID_feral, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_Covariate/ID_Feral_Chicken.txt", col_names = F)
+```
+
+## Linear Model to remove Covariate
+```{r, eval = F}
+# Linear model (Island+location)
+oneway.model <- lm(`ASV2:Mediterraneibacter` ~ Island, data = feral_covariates_microbiome_RUN1_FULL)
+summary(oneway.model)
+
+# Linear model (Sample Type)
+oneway.model <- lm(Richness ~ Sample.Type, data = feral_covariates_microbiome_RUN1_Richness)
+summary(oneway.model)
+
+# Linear model (PC 14)
+oneway.model <- lm(Richness ~ PC14, data = feral_covariates_microbiome_RUN1_Richness)
+summary(oneway.model)
+
+# Linear model (PC 15)
+oneway.model <- lm(Richness ~ PC15, data = feral_covariates_microbiome_RUN1_Richness)
+summary(oneway.model)
+
+# Linear model (PC 19)
+oneway.model <- lm(Richness ~ PC19, data = feral_covariates_microbiome_RUN1_Richness)
+summary(oneway.model)
+```
 ## Save the new created object
 
 ```{r, eval = F}
-# We save it in the same workspace than the previous because it is not a continuation it is an addition
-save.image(file.path(save,"GWAS_Data.RData"))
+# Erase all objects except metadata, Chicken_Microbiome_pheno, ps_object, save
+rm(list = ls()[!(ls() %in% c("metadata", "ps", "save", "Chicken_microbiome_pheno", "ps_Norm", "ps_Norm_F", "ps_core", "ps_rare"))])
+
+save.image(file.path(save, "GWAS_Data_RUN2.RData"))
 ```

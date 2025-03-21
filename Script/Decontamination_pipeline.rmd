@@ -11,6 +11,8 @@ library(decontam)
 library(ggplot2)
 library(vegan)
 library(tidyverse)
+library(decontam)
+packageVersion("decontam")
 ```
 
 ## Load Data
@@ -40,6 +42,9 @@ metadata$Sex <- with(metadata, ifelse(grepl("f", metadata$Sex, ignore.case = T, 
 # Sort by sample Name
 metadata <- metadata[order(metadata$Sample.Name), ]
 
+# Match metadata file with seqtab (for the first run only)
+metadata <- metadata[!(row.names(metadata) %in% c("039", "040", "041")), ]
+
 # Because some duplicates in the Samples remove them from Seqtab
 seqtab.nochim <- seqtab.nochim[!(row.names(seqtab.nochim) %in% c("157", "365")), ]
 
@@ -61,6 +66,32 @@ ps
 ```
 
 ## Decontamination steps
+
+```{r, eval = F}
+# Contaminants Prevalence filtering
+sample_data(ps)$is.neg <- sample_data(ps)$Sample.Type == "Blanks"
+contamdf.prev <- isContaminant(ps, method = "prevalence", neg = "is.neg", threshold = 0.5)
+table(contamdf.prev$contaminant)
+head(which(contamdf.prev$contaminant))
+
+# Make phyloseq object of presence-absence in negative controls and true samples
+ps.pa <- transform_sample_counts(ps, function(abund) 1 * (abund > 0))
+ps.pa.neg <- prune_samples(sample_data(ps.pa)$Sample.Type == "Blanks", ps.pa)
+ps.pa.pos <- prune_samples(sample_data(ps.pa)$Sample.Type != "Blanks", ps.pa)
+# Make data.frame of prevalence in positive and negative samples
+df.pa <- data.frame(
+    pa.pos = taxa_sums(ps.pa.pos), pa.neg = taxa_sums(ps.pa.neg),
+    contaminant = contamdf.prev$contaminant
+)
+
+ps_noncontam <- prune_taxa(!contamdf.prev$contaminant, ps)
+
+# Remove is.neg column
+ps_noncontam <- subset_samples(ps_noncontam, select = -is.neg)
+sample_data(ps_noncontam)
+
+ps <- subset_samples(ps_noncontam, Sample.Type != "Blanks")
+```
 
 ```{r, eval = F}
 head(tax_table(ps)) # check
@@ -114,27 +145,25 @@ ps_rarecurve <- prune_samples(sample_sums(ps) <= 10000, ps)
 
 tab <- otu_table(ps_rarecurve)
 class(tab) <- "matrix"
-rare <- rarecurve(tab, step = 10000, lwd = 2, ylab = "OTU", label = F)
+rare <- rarecurve(tab, step = 100000, lwd = 2, ylab = "OTU", label = F)
 
 # Normalize and filter low count reads
 
-ps_Norm <- transform_sample_counts(ps, function(x) {
-    x / sum(x)
-})
-ps_Norm <- filter_taxa(ps_Norm, function(x) mean(x) > 1e-5, TRUE)
+ps_Norm <- transform_sample_counts(ps, function(x) x / sum(x))
+ps_Norm_filt <- filter_taxa(ps_Norm, function(x) mean(x) > 1e-5, TRUE)
 
 # Rarefy reads
 set.seed(200)
-ps <- prune_taxa(taxa_names(ps_Norm), ps)
-ps_rare <- rarefy_even_depth(ps, sample.size = min(sample_sums(ps)))
+ps_filt <- prune_taxa(taxa_names(ps_Norm_filt), ps)
+ps_rare_filt <- rarefy_even_depth(ps_filt, sample.size = min(sample_sums(ps_filt)))
 ```
 
 ## Save the workspace
 
 ```{r, eval = F}
 # Erase everything not needed anymore
-rm(list = ls()[!(ls() %in% c("seqtab.nochim", "taxa", "save", "ps", "ps_rare", "ps_Norm", "rare"))])
+rm(list = ls()[!(ls() %in% c("seqtab.nochim", "taxa", "save", "ps", "ps_rare_filt", "ps_Norm", "rare", "ps_filt", "ps_Norm_filt", "metadata"))])
 
 # Save workspace
-save.image(file.path(save, "Decomtamination_pipeline.RData"))
+save.image(file.path(save, "Decomtamination_pipeline_RUN2.RData"))
 ```

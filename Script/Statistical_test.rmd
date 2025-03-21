@@ -45,7 +45,7 @@ It is used to compare two or more independant samples of equal or different samp
 **significant results**: Indicates that at least one sample stochastically dominates one other sample (but doesn't say which one).
 
 ```{r, eval = F}
-kw <- kruskal.test(Richness ~ Island, data = alpha_div)
+kw <- kruskal.test(simpson ~ Sample.Type, data = evenness_div)
 kw
 ```
 

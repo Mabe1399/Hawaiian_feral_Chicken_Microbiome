@@ -33,3 +33,18 @@ ASV_table <- tibble::rownames_to_column(ASV_table, "ASV_ID")
 # Export to the funcPred folder
 write_tsv(ASV_table, file = file.path(FuncPred, "ASV_Table_RUN1.tsv"))
 ```
+
+## Result visualisation after Picrust2
+
+```{r, eval = F}
+# Loading
+library(ggpicrust2)
+library(tibble)
+library(tidyverse)
+library(ggprism)
+library(patchwork)
+```
+
+```{r, eval = F}
+# ggpicrust
+```
