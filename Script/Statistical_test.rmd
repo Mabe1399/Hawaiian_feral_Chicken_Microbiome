@@ -26,14 +26,13 @@ Usually microbiome data doesn't really follow normal distribution so non-paramet
 ### Exctract variables
 
 ```{r}
-rich = estimate_richness(ps_rare)
+rich <- estimate_richness(ps_rare)
 
 alpha_div <- sample_data(ps_rare)
 
 alpha_div$Richness <- rich$Observed
 
 alpha_div <- as.matrix(alpha_div)
-
 ```
 
 ### Kurskal-Wallice test
@@ -45,7 +44,7 @@ It is used to compare two or more independant samples of equal or different samp
 **significant results**: Indicates that at least one sample stochastically dominates one other sample (but doesn't say which one).
 
 ```{r, eval = F}
-kw <- kruskal.test(simpson ~ Sample.Type, data = evenness_div)
+kw <- kruskal.test(Richness ~ Island, data = alpha_div)
 kw
 ```
 
@@ -58,7 +57,6 @@ It is a good test to start with.
 ```{r, eval = F}
 # Set the distance metrics for the matrix
 ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "bray")
-
 ```
 
 ### Adonis test
@@ -85,5 +83,5 @@ vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island * phyloseq
 # Save the data
 
 ```{r, eval = F}
-save.image(file.path(save,"Decomtamination_pipeline.RData"))
+save.image(file.path(save, "Decomtamination_pipeline.RData"))
 ```

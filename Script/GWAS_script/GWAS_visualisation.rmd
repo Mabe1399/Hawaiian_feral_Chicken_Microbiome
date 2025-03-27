@@ -1,0 +1,53 @@
+# GWAS Visualisation Script
+
+This is gonna be used to visualise the output of different GWAS Analysis by doing Manhattan plot for example.
+## Import Packages
+```{r}
+library(qqman)
+library(dplyr)
+```
+
+
+## Import the Manhattan function of Willlian
+```{r, eval = F}
+# Import form Willian github
+source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-plot_manhattan.R")
+```
+
+## Import the data
+```{r, eval = F}
+# Import the GEMMA output for different trait
+GWAS_output <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/RICHNESS/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome.Richness_without_loc_and_PC_GWAS-job9182586.assoc.txt")
+```
+
+## Make Manhattan plot using manhattan function
+```{r}
+## using the qqman package
+manhattan(GWAS_output, chr="chr", bp="ps", snp = "rs", p= "p_score", logp = TRUE)
+```
+
+## Format the Dataset for Willian's manhattan plot
+```{r}
+# adjust the p-value
+GWAS_output$p_score <- p.adjust(GWAS_output$p_score, method = "BH")
+
+# Filter value depending on threashold
+GWAS_filtered <- GWAS_output %>%
+  filter(p_score<0.5)
+```
+
+## Make a Manhattan plot (willian function)
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+    chrnamevector = GWAS_output$chr,
+    chrpositionvector = GWAS_output$ps,
+    values = -log10(GWAS_output$p_score),
+    abovethreshold = Inf,
+    belowthreshold = -Inf,
+    colors = c("blue", "red"),
+    xlabel = "Chromosome",
+    ylabel = "P score",
+    plottitle = "Manhattan plot"
+)
+```

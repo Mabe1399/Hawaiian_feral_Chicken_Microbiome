@@ -17,10 +17,8 @@ library(readr)
 ```{r, eval = F}
 # Add ID first
 Chicken_microbiome_pheno <- as.data.frame(metadata$ID, row.names = c(sample_names(ps_rare)))
-colnames(Chicken_microbiome_pheno) <- c("ID")
-# Add Sample Type as a possible covariate
-Chicken_microbiome_pheno$Sample.Type <- metadata$Sample.Type
-# Create the dataframe by adding the richness and eveness
+colnames(Chicken_microbiome_pheno) <- c("IID")
+
 # Richness
 rich <- estimate_richness(ps_rare)
 Chicken_microbiome_pheno$Richness <- rich$Observed
@@ -31,45 +29,89 @@ p <- microbiome::evenness(otu_table(ps_rare))
 Chicken_microbiome_pheno$Eveness <- p$simpson
 
 # Principal componant of beta div
-ord_ps_core <- ordinate(ps_core, "PCoA", "bray")
-Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, ord_ps_core$vectors[, 1:5])
+ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
+Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, ord_ps$vectors[, 1:5])
+colnames(Chicken_microbiome_pheno)[5:9] <- c("BRAY_PC1", "BRAY_PC2", "BRAY_PC3", "BRAY_PC4", "BRAY_PC5")
 
 # Relative abundance of the set core microbiome
-Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, otu_table(ps_core))
+ps_ASV_GWAS <- core(ps_Norm, detection = 0, prevalence = 0.5) # 50% percent see if good threashold
+ps_ASV_GWAS <- transform_sample_counts(ps_ASV_GWAS, function(x) x / sum(x))
+
+# Transform the core microbiome in center log ratio (CLR)
+ps_ASV_GWAS_CLR <- microbiome::transform(ps_ASV_GWAS, "clr")
+
+# Add to the phenotype
+Chicken_microbiome_pheno_clr <- cbind(Chicken_microbiome_pheno, otu_table(ps_ASV_GWAS_CLR))
+Chicken_microbiome_pheno <- cbind(Chicken_microbiome_pheno, otu_table(ps_ASV_GWAS))
+
 
 # Format the 0 value in NA ?
 Chicken_microbiome_pheno[Chicken_microbiome_pheno == 0] <- NA
+Chicken_microbiome_pheno_clr[Chicken_microbiome_pheno_clr == 0] <- NA
 
-# Log transformation
+# Remove Sample ERC44: non present in genome data
+Chicken_microbiome_pheno <- Chicken_microbiome_pheno[Chicken_microbiome_pheno$IID != "ERC44", ]
+Chicken_microbiome_pheno_clr <- Chicken_microbiome_pheno_clr[Chicken_microbiome_pheno_clr$IID != "ERC44", ]
+
+# Create a text file with the phenotypes
+write_delim(Chicken_microbiome_pheno, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_PHENO.txt")
+
+# Create a text file with the phenotypes (Without Headers)
+write_delim(Chicken_microbiome_pheno, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_PHENO_without_headers.txt", col_names = FALSE)
+
+write_delim(Chicken_microbiome_pheno_clr, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_PHENO_clr_without_headers.txt", col_names = FALSE)
 ```
 
-## Single-Trait (And multiple trait) GWAS Analysis Data
+## Phenotype and Covariates Dataframe
 ```{r, eval = F}
 # Load the data file
-feral_covariates_microbiome <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_Covariate/feral_covariates_microbiome.txt")
+feral_covariates_microbiome <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/feral_covariates_microbiome.txt")
 
 # Reformat
 feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, feral_covariates_microbiome$Island == "kauai", "Kauai")
 feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, is.na(feral_covariates_microbiome$Island), "Kauai")
+
+# For merging purposes change ID to IID
+colnames(feral_covariates_microbiome)[1] <- c("IID")
+
 # Merge the dataset (full)
-feral_covariates_microbiome_RUN1_FULL <- merge(Chicken_microbiome_pheno, feral_covariates_microbiome, by = "ID")
+feral_covariates_microbiome_RUN1 <- merge(Chicken_microbiome_pheno, feral_covariates_microbiome, by = "IID")
 
-# Merge the dataset (Richness only)
-feral_covariates_microbiome_RUN1_Richness <- merge(Chicken_microbiome_pheno[1:3], feral_covariates_microbiome, by = "ID")
+# Add Sample Type as a possible covariate
+feral_covariates_microbiome_RUN1$Sample.Type <- metadata$Sample.Type[metadata$ID != "ERC44"]
+
+# Remove non important covariants (calc_sex)
+feral_covariates_microbiome_RUN1 <- feral_covariates_microbiome_RUN1[, !(names(feral_covariates_microbiome_RUN1) %in% c("calc_sex", "location.numeric", "Latitude", "Longitude", "latitude.longitude"))]
+
+# Change Age_category to binary (Juv = 1; Ad = 2)
+feral_covariates_microbiome_RUN1$Age_category <- c(Adult = 2, Juvenile = 1)[feral_covariates_microbiome_RUN1$Age_category]
+
+# Change Island to binary (Kauai = 1; Bermuda = 2)
+feral_covariates_microbiome_RUN1$Island <- c(Bermuda = 2, Kauai = 1)[feral_covariates_microbiome_RUN1$Island]
+
+# Change Sample.Type to binary (Cecum = 1; Scrape = 2)
+feral_covariates_microbiome_RUN1$Sample.Type <- c(Scrape = 2, Cecum = 1)[feral_covariates_microbiome_RUN1$Sample.Type]
 ```
 
-## Create an ID list for Genome dataset filtering
+## Linear Model to pick Covariate for each Phenotype (look if gonna be used or not)
 ```{r, eval = F}
-ID_feral <- as.data.frame(feral_covariates_microbiome_RUN1_FULL$ID)
+# Create a vector where the p value are gonna stored
+p_value <- c()
 
-write_delim(ID_feral, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_Covariate/ID_Feral_Chicken.txt", col_names = F)
-```
+# Variable to extract
+nbr_pheno <- ncol(Chicken_microbiome_pheno)
 
-## Linear Model to remove Covariate
-```{r, eval = F}
-# Linear model (Island+location)
-oneway.model <- lm(`ASV2:Mediterraneibacter` ~ Island, data = feral_covariates_microbiome_RUN1_FULL)
-summary(oneway.model)
+# Loop testing all the covariates against Pheno.
+for (x in seq_len((ncol(feral_covariates_microbiome_RUN1)))) {
+    name <- colnames(feral_covariates_microbiome_RUN1)[nbr_pheno + x][1]
+    oneway.model <- lm(Richness ~ name, data = feral_covariates_microbiome_RUN1)
+    f <- summary(oneway.model)$fstatistic
+    model_p <- as.vector((pf(f[1], f[2], f[3], lower = FALSE)))
+    p_value <- append(p_value, model_p)
+}
+
+p_value
+
 
 # Linear model (Sample Type)
 oneway.model <- lm(Richness ~ Sample.Type, data = feral_covariates_microbiome_RUN1_Richness)
@@ -87,6 +129,35 @@ summary(oneway.model)
 oneway.model <- lm(Richness ~ PC19, data = feral_covariates_microbiome_RUN1_Richness)
 summary(oneway.model)
 ```
+
+## Create the covariate dataframes for each Phenotype
+
+```{r, eval = F}
+# General covariates file
+write_delim(feral_covariates_microbiome_RUN1[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_RUN1))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_without_location.txt", col_names = F)
+
+# Covariate file without the PCs
+feral_covariates_microbiome_Without_PC <- feral_covariates_microbiome_RUN1[, !(names(feral_covariates_microbiome_RUN1) %in% c("calc_sex", "location.numeric", "Latitude", "Longitude", "latitude.longitude", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20"))]
+write_delim(feral_covariates_microbiome_Without_PC[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_Without_PC))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_without_PC_and_Loc.txt", col_names = F)
+
+# Covariate file with the first 10 PCs
+feral_covariates_microbiome_With_10PC <- feral_covariates_microbiome_RUN1[, !(names(feral_covariates_microbiome_RUN1) %in% c("calc_sex", "location.numeric", "Latitude", "Longitude", "latitude.longitude", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20"))]
+write_delim(feral_covariates_microbiome_With_10PC[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_With_10PC))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_with_10PC_and_without_Loc.txt", col_names = F)
+
+# Covariates file for Richness
+# keep important covariants
+feral_covariates_microbiome_Richness <- feral_covariates_microbiome_RUN1[, (names(feral_covariates_microbiome_RUN1) %in% c("IID", "Sample.Type", "PC14", "PC15", "PC19", "Island"))]
+
+write_delim(feral_covariates_microbiome_Richness, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_Richness.txt", col_names = F)
+```
+
+## Create an ID list for Genome dataset filtering
+```{r, eval = F}
+ID_feral <- as.data.frame(feral_covariates_microbiome_RUN1$IID)
+
+write_delim(ID_feral, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/ID_Feral_Chicken.txt", col_names = F)
+```
+
 ## Save the new created object
 
 ```{r, eval = F}
