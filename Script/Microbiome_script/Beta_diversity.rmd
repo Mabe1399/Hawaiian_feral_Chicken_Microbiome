@@ -1,0 +1,282 @@
+# Beta Diversity
+
+The beta diversity is the ratio between regional and local species.
+
+There is multiple way to represent it but a PCA plot is one of the most used way.
+
+Obviously multiple Metrics can be used like Bray-Curtis, Aitchinson, Jaccard, etc..
+
+```{r}
+# Library
+library("plyr")
+packageVersion("plyr")
+```
+
+
+## Metric conversion and different Method computation
+
+```{r, eval = F}
+# Compute all the methods in bray-curtis
+dist <- "bray"
+ord_meths <- c("NMDS", "PCoA", "MDS", "CCA", "DCA", "RDA")
+plist <- llply(as.list(ord_meths), function(i, physeq, dist) {
+      ordi <- ordinate(physeq, method = i, distance = dist)
+      plot_ordination(physeq, ordi, "samples", color = "Island")
+}, ps_Norm, dist)
+
+names(plist) <- ord_meths
+
+# Create a dataframe containing each method
+
+pdataframe <- ldply(plist, function(x) {
+      df <- x$data[, 1:2]
+      colnames(df) <- c("PC1", "PC2")
+      return(cbind(df, x$data))
+})
+names(pdataframe)[1] <- "method"
+```
+
+## PCoA plot
+
+We can then plot the different methods togheter or separately.
+
+```{r, eval = F}
+# Togheter
+p <- ggplot(pdataframe, aes(PC1, PC2, color = Island))
+p <- p + geom_point(size = 2) # geom™_polygon()
+p <- p + facet_wrap(~method, scales = "free")
+p <- p + scale_fill_brewer(type = "qual", palette = "Set1")
+p <- p + scale_colour_brewer(type = "qual", palette = "Set1")
+p
+```
+
+## PCoA Plot Using Bray-Curtis (Islands)
+
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+
+names(col_gir) <- c("Bermuda", "Kauai")
+
+ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
+g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
+head(g)
+
+# extract % variation
+tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
+tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
+set.seed(386)
+
+# pcoa plot Giraffe Species
+ggplot(g, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
+      theme_bw() +
+      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
+      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+      xlab(paste0("PC1 (", tempx, "%)")) +
+      ylab(paste0("PC2 (", tempy, "%)")) +
+      theme(
+            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
+            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
+            axis.text.y = element_text(size = 11, color = "black"),
+            axis.text.x = element_text(size = 11, color = "black"),
+            strip.text = element_text(size = 13)
+      ) +
+      theme(
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.border = element_rect(colour = "grey29")
+      ) +
+      theme(
+            legend.title = element_text(size = 13),
+            legend.text = element_text(size = 13),
+            legend.key.size = unit(0.6, "cm"),
+            legend.position = "right"
+      ) +
+      scale_color_manual(values = col_gir) +
+      scale_fill_manual(values = col_gir)
+```
+
+## PCoA Plot Using Bray-Curtis (Sex)
+
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+
+names(col_gir) <- c("Male", "Female")
+
+ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
+g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
+head(g)
+
+# extract % variation
+tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
+tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
+set.seed(386)
+
+# pcoa plot Giraffe Species
+ggplot(g, aes(x = Axis.1, y = Axis.2, color = Sex, fill = Sex)) +
+      theme_bw() +
+      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
+      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+      xlab(paste0("PC1 (", tempx, "%)")) +
+      ylab(paste0("PC2 (", tempy, "%)")) +
+      theme(
+            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
+            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
+            axis.text.y = element_text(size = 11, color = "black"),
+            axis.text.x = element_text(size = 11, color = "black"),
+            strip.text = element_text(size = 13)
+      ) +
+      theme(
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.border = element_rect(colour = "grey29")
+      ) +
+      theme(
+            legend.title = element_text(size = 13),
+            legend.text = element_text(size = 13),
+            legend.key.size = unit(0.6, "cm"),
+            legend.position = "right"
+      ) +
+      scale_color_manual(values = col_gir) +
+      scale_fill_manual(values = col_gir)
+```
+
+## PCoA Plot Using Bray-Curtis (Sample Type)
+
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+
+names(col_gir) <- c("Cecum", "Scrape")
+
+ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
+g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
+head(g)
+
+# extract % variation
+tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
+tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
+set.seed(386)
+
+# pcoa plot
+ggplot(g, aes(x = Axis.1, y = Axis.2, color = Sample.Type, fill = Sample.Type)) +
+      theme_bw() +
+      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
+      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+      xlab(paste0("PC1 (", tempx, "%)")) +
+      ylab(paste0("PC2 (", tempy, "%)")) +
+      theme(
+            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
+            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
+            axis.text.y = element_text(size = 11, color = "black"),
+            axis.text.x = element_text(size = 11, color = "black"),
+            strip.text = element_text(size = 13)
+      ) +
+      theme(
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.border = element_rect(colour = "grey29")
+      ) +
+      theme(
+            legend.title = element_text(size = 13),
+            legend.text = element_text(size = 13),
+            legend.key.size = unit(0.6, "cm"),
+            legend.position = "right"
+      ) +
+      scale_color_manual(values = col_gir) +
+      scale_fill_manual(values = col_gir)
+```
+
+## PCoA Plot using wheighted Unifrac (Island)
+
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+
+names(col_gir) <- c("Bermuda", "Kauai")
+
+ord_ps <- ordinate(ps_Norm, "PCoA", "unifrac", weighted = T)
+g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
+head(g)
+
+# extract % variation
+tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
+tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
+set.seed(386)
+
+# pcoa plot Giraffe Species
+ggplot(g, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
+      theme_bw() +
+      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
+      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+      xlab(paste0("PC1 (", tempx, "%)")) +
+      ylab(paste0("PC2 (", tempy, "%)")) +
+      theme(
+            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
+            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
+            axis.text.y = element_text(size = 11, color = "black"),
+            axis.text.x = element_text(size = 11, color = "black"),
+            strip.text = element_text(size = 13)
+      ) +
+      theme(
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.border = element_rect(colour = "grey29")
+      ) +
+      theme(
+            legend.title = element_text(size = 13),
+            legend.text = element_text(size = 13),
+            legend.key.size = unit(0.6, "cm"),
+            legend.position = "right"
+      ) +
+      scale_color_manual(values = col_gir) +
+      scale_fill_manual(values = col_gir)
+```
+
+## PCoA plot using Aitchinson (Island)
+
+### Conversion to CLR values
+```{r}
+ps_CLR <- microbiome::transform(ps_Norm, "clr")
+```
+
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+
+names(col_gir) <- c("Bermuda", "Kauai")
+
+ord_clr <- ordinate(ps_CLR, "PCoA", "euclidean")
+PCA_aitch <- plot_ordination(ps_Norm, ord_ps, justDF = T)
+head(PCA_aitch)
+
+# extract % variation
+sum1 <- sum(ord_clr$CA$eig)
+tempx <- as.character(round(((ord_clr$CA$eig[1] / sum1) * 100), 2))
+tempy <- as.character(round(((ord_clr$CA$eig[2] / sum1) * 100), 2))
+set.seed(386)
+
+# pcoa plot Giraffe Species
+ggplot(PCA_aitch, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
+      theme_bw() +
+      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.95) + # confidence interval
+      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+      xlab(paste0("PC1 (", tempx, "%)")) +
+      ylab(paste0("PC2 (", tempy, "%)")) +
+      theme(
+            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
+            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
+            axis.text.y = element_text(size = 11, color = "black"),
+            axis.text.x = element_text(size = 11, color = "black"),
+            strip.text = element_text(size = 13)
+      ) +
+      theme(
+            panel.grid.minor = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.border = element_rect(colour = "grey29")
+      ) +
+      theme(
+            legend.title = element_text(size = 13),
+            legend.text = element_text(size = 13),
+            legend.key.size = unit(0.6, "cm"),
+            legend.position = "right"
+      ) +
+      scale_color_manual(values = col_gir) +
+      scale_fill_manual(values = col_gir)
+```

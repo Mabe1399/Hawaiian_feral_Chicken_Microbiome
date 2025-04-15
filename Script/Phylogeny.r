@@ -21,7 +21,7 @@ Biostrings::writeXStringSet(refseq(ps_rare), file.path(Phylogeny, "ASV.fasta"))
 system2("sh", args = c(file.path(script, "Bash_phylo.sh"), file.path(Phylogeny, "ASV.fasta")))
 
 # Transfer to the phyloseq object
-Treefile <- file.path(Phylogeny, "ASV.mafft.trimal.treefile")
+Treefile <- file.path(Phylogeny, "ASV_16SrRNA_RUN1.tre")
 
 Tree <- ape::read.tree(Treefile)
 

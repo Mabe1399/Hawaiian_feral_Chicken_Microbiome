@@ -17,37 +17,84 @@ source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-
 ## Import the data
 ```{r, eval = F}
 # Import the GEMMA output for different trait
-GWAS_output <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/RICHNESS/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome.Richness_without_loc_and_PC_GWAS-job9182586.assoc.txt")
+GWAS_output_10PC <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/RICHNESS/cc5k.autosomes.selectFERAL.renamesamples.minimize.Richness_without_loc_GWAS-job9210733.assoc.txt")
+
+GWAS_output_CLR <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/RICHNESS/cc5k.autosomes.selectFERAL.renamesamples.minimize.Richness_without_loc_GWAS-job9210032.assoc.txt")
+
+GWAS_output_0PC <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/RICHNESS/cc5k.autosomes.selectFERAL.renamesamples.minimize.Richness_without_loc_GWAS-job9210164.assoc.txt")
+
 ```
 
 ## Make Manhattan plot using manhattan function
-```{r}
+```{r, fig.show="hold", out.width="50%"}
+par(mfrow = c(2,2))
 ## using the qqman package
-manhattan(GWAS_output, chr="chr", bp="ps", snp = "rs", p= "p_score", logp = TRUE)
+manhattan(GWAS_output_10PC, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+
+manhattan(GWAS_output_CLR, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+
+manhattan(GWAS_output_0PC, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
 ```
 
 ## Format the Dataset for Willian's manhattan plot
 ```{r}
 # adjust the p-value
-GWAS_output$p_score <- p.adjust(GWAS_output$p_score, method = "BH")
+GWAS_output_10PC$p_score_BH <- p.adjust(GWAS_output_10PC$p_score, method = "BH")
+
+GWAS_output_CLR$p_score_BH <- p.adjust(GWAS_output_CLR$p_score, method = "BH")
+
+GWAS_output_0PC$p_score_BH <- p.adjust(GWAS_output_0PC$p_score, method = "BH")
 
 # Filter value depending on threashold
-GWAS_filtered <- GWAS_output %>%
-  filter(p_score<0.5)
+GWAS_filtered_10PC <- GWAS_output_10PC %>%
+  filter(p_score_BH < 0.05)
+
+# Filter value depending on threashold
+GWAS_filtered_CLR <- GWAS_output_CLR %>%
+  filter(p_score_BH < 0.05)
+
+# Filter value depending on threashold
+GWAS_filtered_0PC <- GWAS_output_0PC %>%
+  filter(p_score_BH < 0.05)
 ```
 
 ## Make a Manhattan plot (willian function)
-```{r}
+```{r, fig.show="hold", out.width="50%"}
+par(mfrow = c(2,2))
 # Use Willian Manhattan plot function
 plot_manhattan(
-    chrnamevector = GWAS_output$chr,
-    chrpositionvector = GWAS_output$ps,
-    values = -log10(GWAS_output$p_score),
-    abovethreshold = Inf,
-    belowthreshold = -Inf,
-    colors = c("blue", "red"),
-    xlabel = "Chromosome",
-    ylabel = "P score",
-    plottitle = "Manhattan plot"
+  chrnamevector = GWAS_output_10PC$chr,
+  chrpositionvector = GWAS_output_10PC$ps,
+  values = -log10(GWAS_output_10PC$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "P score",
+  plottitle = "Manhattan plot with 10 PC as covariantes"
+)
+
+plot_manhattan(
+  chrnamevector = GWAS_output_CLR$chr,
+  chrpositionvector = GWAS_output_CLR$ps,
+  values = -log10(GWAS_output_CLR$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "P score",
+  plottitle = "Manhattan plot with Center Log Ratio transformation"
+)
+
+plot_manhattan(
+  chrnamevector = GWAS_output_0PC$chr,
+  chrpositionvector = GWAS_output_0PC$ps,
+  values = -log10(GWAS_output_0PC$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "P score",
+  plottitle = "Manhattan plot with 0 PC as covariantes"
 )
 ```

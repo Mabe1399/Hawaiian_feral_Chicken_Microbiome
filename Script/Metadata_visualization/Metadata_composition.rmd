@@ -1,0 +1,181 @@
+# Script for Population Composition visualization
+This script is gonna be used mostly to get visual representation of Sample composition. ex. Bermuda/Hawai , Location, male/Femal, population stratification, etc.
+
+## library
+```{r}
+library(readr)
+library(ggplot2)
+library(ppcor)
+library(corrplot)
+```
+
+## Load the metadata/covariate file
+```{r}
+# Load the microbiome metadata file
+metadata <- read.csv("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/Metadata/Metadata_Chicken.csv", na = "NA")
+
+# Remove all the NA values
+metadata <- metadata[!is.na(metadata$Sample.Name), ]
+
+# Sort by sample Name
+metadata <- metadata[order(metadata$Sample.Name), ]
+
+# Match metadata file with seqtab (for the first run only)
+metadata <- metadata[!(row.names(metadata) %in% c("450", "451", "452")), ]
+
+## Load the second file
+feral_covariates_microbiome <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/feral_covariates_microbiome.txt", na = "NA")
+
+# Reformat
+feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, feral_covariates_microbiome$Island == "kauai", "Kauai")
+feral_covariates_microbiome$Island <- replace(feral_covariates_microbiome$Island, is.na(feral_covariates_microbiome$Island), "Kauai")
+
+# Change the Sex column
+feral_covariates_microbiome$calc_sex <- with(feral_covariates_microbiome, ifelse(grepl("f", feral_covariates_microbiome$calc_sex, ignore.case = T, fixed = T), "Female", "Male")) # nolint: T_and_F_symbol_linter.
+
+# Merge both metadata set togheter
+Metadata_cleaned_microbiome <- merge(metadata[c(1, 3:4)], feral_covariates_microbiome, by = "ID")
+
+## Remove Unecessery information
+
+# remove Latitude, Longitude, latitude.longitude
+Metadata_cleaned_microbiome <- Metadata_cleaned_microbiome[, !(names(Metadata_cleaned_microbiome) %in% c("Latitude", "Longitude", "latitude.longitude"))]
+
+## Format in the good type
+Metadata_cleaned_microbiome$location.numeric <- as.factor(Metadata_cleaned_microbiome$location.numeric)
+
+Metadata_cleaned_microbiome$sex_calc_numeric <- as.factor(Metadata_cleaned_microbiome$sex_calc_numeric)
+
+Metadata_cleaned_microbiome$Age_category <- as.factor(Metadata_cleaned_microbiome$Age_category)
+
+Metadata_cleaned_microbiome$Island <- as.factor(Metadata_cleaned_microbiome$Island)
+
+Metadata_cleaned_microbiome$Sample.Type <- as.factor(Metadata_cleaned_microbiome$Sample.Type)
+
+Metadata_cleaned_microbiome$calc_sex <- as.factor(Metadata_cleaned_microbiome$calc_sex)
+```
+
+## visualisation
+
+### Set color Palette
+```{r}
+col_gir <- c("#a0be25", "#25be4b")
+```
+
+### Difference distribution of the data based on Sex
+
+```{r}
+# Create a plot to visualize the difference in nbr. individuals per population
+ggplot(Metadata_cleaned_microbiome, aes(x = calc_sex, fill = calc_sex)) +
+    geom_bar(stat = "count") +
+    scale_fill_manual(values = col_gir) +
+    theme(legend.position = "none") +
+    ggtitle("Nbr. of Individuals per Sex") +
+    xlab("Sex") +
+    ylab("Nbr. of Individuals")
+```
+
+### Difference distribution of the data based on Island
+
+```{r}
+# Create a plot to visualize the difference in nbr. individuals per population
+ggplot(Metadata_cleaned_microbiome, aes(x = Island, fill = Island)) +
+    geom_bar(stat = "count") +
+    scale_fill_manual(values = col_gir) +
+    theme(legend.position = "none") +
+    ggtitle("Nbr. of Individuals per Island") +
+    xlab("Island") +
+    ylab("Nbr. of Individuals")
+```
+
+### Difference in distribution of the data based on Location sampled
+
+```{r}
+# Create a plot to visualize the difference in nbr. individuals per population
+ggplot(Metadata_cleaned_microbiome, aes(x = location.numeric, fill = location.numeric)) +
+    geom_bar(stat = "count") +
+    theme(legend.position = "none") +
+    ggtitle("Nbr. of Individuals per location") +
+    xlab("location category") +
+    ylab("Nbr. of Individuals")
+```
+
+### Combine the distribution of Location, Island and sex
+```{r}
+ggplot(Metadata_cleaned_microbiome, aes(x = location.numeric, fill = location.numeric)) +
+    geom_bar(stat = "count") +
+    theme(legend.position = "none") +
+    ggtitle("Nbr. of Individuals per location and sex") +
+    xlab("location category") +
+    ylab("Nbr. of Individuals") +
+    facet_grid(calc_sex ~ Island, scales = "free")
+```
+
+### Look at the correlations between environmental variable
+
+```{r}
+# Extract all possible covariates
+Spearman_covariate <- Metadata_cleaned_microbiome[c(24:26, 28:29)]
+
+# Change Age_category to binary (Juv = 1; Ad = 2)
+Spearman_covariate$Age_category <- c(Adult = 2, Juvenile = 1)[Spearman_covariate$Age_category]
+
+# Change Island to binary (Kauai = 1; Bermuda = 2)
+Spearman_covariate$Island <- c(Bermuda = 2, Kauai = 1)[Spearman_covariate$Island]
+
+# Change Sample.Type to binary (Cecum = 1; Scrape = 2)
+Spearman_covariate$Sample.Type <- c(Scrape = 2, Cecum = 1)[Spearman_covariate$Sample.Type]
+
+# Change everything to numeric
+Spearman_covariate$sex_calc_numeric <- as.numeric(Spearman_covariate$sex_calc_numeric)
+Spearman_covariate$location.numeric <- as.numeric(Spearman_covariate$location.numeric)
+
+# Remove NA
+Spearman_covariate <- Spearman_covariate[!is.na(Spearman_covariate$Body.mass..g.), ]
+
+# Realise a partial Spearman correlation test
+Spearman <- pcor(Spearman_covariate, method = "spearman")
+
+# Visualize the correlation matrix
+corrplot(Spearman$estimate, method = "number", type = "lower", diag = FALSE)
+```
+
+## PC variance explained for Genome PCA
+
+```{r}
+# Calculate the sample variance
+genome_vars_transformed <- apply(Metadata_cleaned_microbiome[4:23], 2, var)
+
+# Calculate the total variance explained
+PVE_Genome <- genome_vars_transformed / sum(genome_vars_transformed) * 100
+
+# visualise the PVE
+plot(PVE_Genome,
+    xlab = "Principal Component",
+    ylab = "Proportion of variance explained",
+    main = "variance explained by each PC",
+    type = "b",
+    col = "red",
+    lwd = 2
+)
+
+# visualise the cumulative effect
+plot(cumsum(PVE_Genome),
+    xlab = "Principal Component",
+    ylab = "Proportion of variance explained",
+    main = "cumulative variance explained by PCs",
+    type = "b",
+    col = "blue",
+    lwd = 2
+)
+```
+
+## Save the  Metadata file into a workspace for safety
+
+```{r}
+# Remove all unnecessary object
+rm(list = ls()[!(ls() %in% c("Metadata_cleaned_microbiome"))])
+
+# Save the cleaned metadata object
+save.image(file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Cleaned_Metadata.RData")
+```

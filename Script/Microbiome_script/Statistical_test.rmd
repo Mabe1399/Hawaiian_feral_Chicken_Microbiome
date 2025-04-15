@@ -1,0 +1,154 @@
+# Statistical test
+
+## Load Workspace
+
+```{r, eval = F}
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN1.RData")
+```
+
+There is multiple statistical test which can be realised:
+
+## Alpha diversity test
+
+### Check normal distribution
+
+By doing an histogram, a Q-Q plot or a shapiro test. You can check for normal distribution.
+
+```{r, eval = F}
+hist()
+qqplot()
+qqline()
+shapiro.test()
+```
+
+Usually microbiome data doesn't really follow normal distribution so non-parametric test are preferred.
+
+### Exctract variables
+
+```{r}
+# For Richness
+rich <- estimate_richness(ps_rare)
+
+alpha_div <- sample_data(ps_rare)
+
+alpha_div <- cbind(alpha_div, rich)
+
+alpha_div <- as.matrix(alpha_div)
+```
+
+### Kurskal-Wallice test
+
+The Kurskal-Wallice test is a non-parametric test for testing if samples originate from the same distribution. 
+ 
+It is used to compare two or more independant samples of equal or different sample size. 
+
+**significant results**: Indicates that at least one sample stochastically dominates one other sample (but doesn't say which one).
+
+```{r, eval = F}
+kw <- kruskal.test(InvSimpson ~ location.numeric, data = alpha_div)
+kw
+```
+
+It is a good test to start with.
+
+#### Variable with significant p-value
+
+**Observed:**
+- Sample.Type
+- location.numeric (look more in detail)
+  
+**Shannon:**
+- Sample.Type
+- location.numeric
+
+**Simpson:**
+- Sample.Type
+- location.numeric
+
+**Chao1:**
+- Sample.Type
+- location.numeric
+
+**InvSimpson:**
+- Sample.Type
+- location.numeric
+
+## Beta diversity test
+
+#### Generate distance metrics
+
+```{r, eval = F}
+# Set the distance metrics for the matrix
+ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "bray")
+
+# Set the distance metrics (Aitchinson) for the matrix
+# First convert to CLR
+ps_CLR <- microbiome::transform(ps_Norm, "clr")
+ps_dist_matrix_clr <- phyloseq::distance(ps_CLR, method = "euclidean")
+
+# Set the distance metrics for the matrix
+ps_dist_matrix_unifrac <- phyloseq::distance(ps_Norm, method = "unifrac", weighted = T)
+```
+
+### Adonis test
+
+The Adonis test is a version of a PERMANOVA. It is essentially a test for difference in the between beta diversity in the sample variables.
+
+**Significant result**: Indicates difference between samples variables.
+
+#### One Variable Adonis with significant p-value (Bray)
+
+```{r, eval = F}
+# Do the Adonis test based on one variables you want
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$calc_sex, permutations = 999)
+```
+
+
+- Island
+- location.numeric
+- Sample.Type
+- Age_category
+
+#### One Variable Adonis with significant p-value (Aitch)
+
+```{r, eval = F}
+# Do the Adonis test for Aitchinson based on one variables you want
+vegan::adonis2(ps_dist_matrix_clr ~ phyloseq::sample_data(ps_CLR)$Sample.Type, permutations = 999)
+```
+
+- Island
+- location.numeric
+- Age_category
+- Sample.Type
+
+#### One Variable Adonis with significant p-value (Unifrac)
+
+```{r, eval = F}
+# Do the Adonis test for unifrac based on one variables you want
+vegan::adonis2(ps_dist_matrix_unifrac ~ phyloseq::sample_data(ps_Norm)$Sex, permutations = 999)
+```
+
+
+#### Two or more Variable Adonis with significant p-value (Bray)
+
+```{r, eval = F}
+# The Adonis test based on two variables
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Sample.Type + phyloseq::sample_data(ps_Norm)$Island + phyloseq::sample_data(ps_Norm)$Age_category, permutations = 999, by = "terms")
+```
+
+- Island/location.numeric but not the opposite
+- Age_category still significant with calc_sex
+- Sample.Type + location.numeric + Age_category: all significant
+- Sample.Type + Island + Age_category: all significant
+
+
+```{r, eval = F}
+# The Adonis test based on interation of two variables
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island * phyloseq::sample_data(ps_Norm)$Sex, permutations = 999, by = "terms")
+```
+
+# Save the data
+
+```{r, eval = F}
+save.image(file.path(save, "Decomtamination_pipeline.RData"))
+```

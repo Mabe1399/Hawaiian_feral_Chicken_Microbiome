@@ -1,0 +1,125 @@
+# GWAS Visualisation Script for Single ASV
+This is gonna be used to visualise the output of different GWAS Analysis from Single ASV which gave significant result by doing Manhattan plot, qqplot, etc. for quality control.
+## Import Packages
+```{r}
+library(qqman)
+library(dplyr)
+```
+
+
+## Import the Manhattan function of Willlian
+```{r, eval = F}
+# Import form Willian github
+source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-plot_manhattan.R")
+```
+
+## Import the data
+```{r, eval = F}
+# Import the GEMMA output for different trait
+GWAS_output_ASV40 <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Single_ASV/ASV40/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_clr-job9193317._CLR_GWAS-job9295735.assoc.txt")
+GWAS_output_ASV1 <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Single_ASV/ASV1/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_clr-job9193317._CLR_GWAS-job9282069.assoc.txt")
+```
+
+
+## ASV40 GWAS
+
+### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_ASV40$p_score_BH <- p.adjust(GWAS_output_ASV40$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_ASV40 %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_ASV40 %>%
+  top_n(n = -1, wt = p_score)
+```
+
+### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_ASV40, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_ASV40$chr,
+  chrpositionvector = GWAS_output_ASV40$ps,
+  values = -log10(GWAS_output_ASV40$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for ASV40"
+)
+```
+
+### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_ASV40$p_score, main = "Q-Q plot of GWAS p-values for ASV40", xlim = c(0, 7), ylim = c(0,12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1-median(GWAS_output_ASV40$p_score),1)/qchisq(0.5,1)
+```
+
+## ASV1 GWAS
+
+### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_ASV1$p_score_BH <- p.adjust(GWAS_output_ASV1$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_ASV1 %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_ASV1 %>%
+  top_n(n = -1, wt = p_score)
+```
+
+### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_ASV1, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_ASV1$chr,
+  chrpositionvector = GWAS_output_ASV1$ps,
+  values = -log10(GWAS_output_ASV1$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for ASV1"
+)
+```
+
+### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_ASV1$p_score, main = "Q-Q plot of GWAS p-values for ASV1", xlim = c(0, 7), ylim = c(0,12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+
+### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1-median(GWAS_output_ASV1$p_score),1)/qchisq(0.5,1)
+```
