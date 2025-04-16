@@ -73,6 +73,36 @@ It is a good test to start with.
 - Sample.Type
 - location.numeric
 
+### Spearman Partial correlation test
+
+```{r}
+# Extract all possible covariates
+Spearman_covariate <- as.data.frame(alpha_div[, c(23:25, 27:28, 36)])
+
+# Change Age_category to binary (Juv = 1; Ad = 2)
+Spearman_covariate$Age_category <- c(Adult = 2, Juvenile = 1)[Spearman_covariate$Age_category]
+
+# Change Island to binary (Kauai = 1; Bermuda = 2)
+Spearman_covariate$Island <- c(Bermuda = 2, Kauai = 1)[Spearman_covariate$Island]
+
+# Change everything to numeric
+Spearman_covariate$sex_calc_numeric <- as.numeric(Spearman_covariate$sex_calc_numeric)
+Spearman_covariate$location.numeric <- as.numeric(Spearman_covariate$location.numeric)
+Spearman_covariate$Island <- as.numeric(Spearman_covariate$Island)
+Spearman_covariate$Body.mass..g. <- as.numeric(Spearman_covariate$Body.mass..g.)
+
+Spearman_covariate$InvSimpson <- as.numeric(Spearman_covariate$InvSimpson)
+
+# Remove NA
+Spearman_covariate <- Spearman_covariate[!is.na(Spearman_covariate$Body.mass..g.), ]
+
+# Realise a partial Spearman correlation test
+Spearman <- pcor(Spearman_covariate, method = "spearman")
+
+# Visualize the correlation matrix
+corrplot(Spearman$estimate, method = "number", type = "lower", diag = FALSE)
+```
+
 ## Beta diversity test
 
 #### Generate distance metrics

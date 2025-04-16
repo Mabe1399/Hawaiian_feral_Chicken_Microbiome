@@ -111,6 +111,39 @@ ggplot(Metadata_cleaned_microbiome, aes(x = location.numeric, fill = location.nu
     facet_grid(calc_sex ~ Island, scales = "free")
 ```
 
+### Difference based on Age category
+```{r}
+# Create a plot to visualize the difference in nbr. individuals per Age category
+ggplot(Metadata_cleaned_microbiome, aes(x = Age_category, fill = Age_category)) +
+    geom_bar(stat = "count") +
+    scale_fill_manual(values = col_gir) +
+    theme(legend.position = "none") +
+    ggtitle("Nbr. of Individuals per Age Category") +
+    xlab("Age Category") +
+    ylab("Nbr. of Individuals")
+```
+
+###  Distribution of Body mass compared to Age category
+```{r}
+# Create a plot to visualize the difference in body mass per Age category
+ggplot(Metadata_cleaned_microbiome, aes(x = Age_category, y = Body.mass..g., fill = Age_category)) +
+    geom_violin(alpha = 1, color = "black", lwd = 0.36, width = 0.7) +
+    geom_boxplot(width = 0.2, fill = "white") +
+    # geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+    geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+    ylab("Body Mass (g)") +
+    xlab("Age Category") +
+    labs(fill = "Age Category") +
+    scale_fill_manual(values = col_gir) +
+    scale_color_manual(values = col_gir) +
+    theme_bw() +
+    theme(axis.title.x = element_text(size = 18, margin = margin(t = 7)), axis.title.y = element_text(size = 18, margin = margin(r = 8)), axis.text.y = element_text(size = 18, color = "black"), axis.text.x = element_text(size = 18, color = "black"), strip.text.x = element_blank()) +
+    theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank())
+
+# Statistical test kurkal-wallis
+kw <- kruskal.test(Body.mass..g. ~ Age_category, data = Metadata_cleaned_microbiome)
+kw
+```
 ### Look at the correlations between environmental variable
 
 ```{r}
