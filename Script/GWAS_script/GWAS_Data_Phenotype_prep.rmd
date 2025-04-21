@@ -1,0 +1,189 @@
+# Phenotype Dataframe preparation
+
+This Script is made top create the Dataframe, which is gonna be used in the GWAS.
+
+The Dataframe will contain:
+- Richness (e.g. Chao1, Shannon, Simpson, Observed)
+- Eveness (e.g. Pielou)
+- Beta-div (PC axis)
+- Relative Abundance of most prevalent bacteria
+
+Because GWAS is based on linear models, one thing which should be done for each metrics is to normalize the data to get normal distribution of the residuals.
+## Load the ps and Metadata
+```{r}
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN1.RData")
+```
+## Library
+```{r , eval = F}
+library(readr)
+library(microbiome)
+```
+
+## Create A complete whole Phenotype dataframe
+
+```{r, eval = F}
+# Add ID first
+Chicken_microbiome_phenotype_complete <- as.data.frame(Metadata_cleaned_microbiome$ID, row.names = c(sample_names(ps_rare)))
+colnames(Chicken_microbiome_phenotype_complete) <- "ID"
+
+# Richness
+rich <- estimate_richness(ps_rare, measures = c("Observed", "Chao1", "Shannon", "Simpson", "InvSimpson"))
+Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, rich)
+
+# Eveness
+p <- microbiome::evenness(otu_table(ps_rare), index = c("simpson", "pielou"))
+Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, p)
+
+# Relative abundance of the set core microbiome
+ps_ASV_GWAS <- core(ps_Norm, detection = 0, prevalence = 0.5) # 50% percent see if good threashold
+ps_ASV_GWAS <- transform_sample_counts(ps_ASV_GWAS, function(x) x / sum(x))
+
+# Transform the core microbiome in center log ratio (CLR), Help with normalization
+ps_ASV_GWAS_CLR <- microbiome::transform(ps_ASV_GWAS, "clr")
+
+# Add to the phenotype
+Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, otu_table(ps_ASV_GWAS_CLR))
+
+# Remove Sample ERC44: non present in genome data
+Chicken_microbiome_phenotype_complete <- Chicken_microbiome_phenotype_complete[Chicken_microbiome_phenotype_complete$ID != "ERC44", ]
+```
+
+## Normalization Step
+
+As explained earlier unfortunately microbiome data is usually non normaly distributed which might cause problems during the GWAS. To avoid that, A normalization step as to be added.
+
+Normalization can be different depending on the nature of the data. I will be using different normalization strategy between the data related to alpha-div and the one related to single-taxa abundance.
+
+Alpha-div: Rank-based Inverse Normal Transformation (INT), a non-parametric method for normalization
+
+Relative abundance data: has already be Center log transformed
+
+### normalization for Alpha-div
+```{r}
+# Create a dataframe with the diversity metrics
+diversity_metrics <- Chicken_microbiome_phenotype_complete[2:9]
+
+# Normalize each metric using INT
+normalized_metrics <- apply(diversity_metrics, 2, function(x) {
+    ranks <- rank(x, ties.method = "average")
+    normalized <- qnorm((ranks - 0.5) / length(ranks))
+    return(normalized)
+})
+
+# Check the result
+head(normalized_metrics)
+
+# Plot histograms of normalized values
+par(mfrow = c(2, 4))
+for (i in 1:ncol(normalized_metrics)) {
+    hist(normalized_metrics[, i], main = colnames(normalized_metrics)[i], col = "lightblue", xlab = "Normalized values")
+}
+normalized_metrics_df <- as.data.frame(normalized_metrics)
+
+# Create a new Phenotype dataframe with the Normalized Data
+Chicken_microbiome_Norm_phenotype_Community <- cbind(Chicken_microbiome_phenotype_complete$ID, normalized_metrics_df)
+colnames(Chicken_microbiome_Norm_phenotype_Community)[1] <- "ID"
+```
+
+### normalization for relative abundance
+
+### CLR
+```{r}
+# Plot histograms of center log transformed Relative abundances
+par(mfrow = c(3, 3))
+for (i in 10:18) {
+    hist(Chicken_microbiome_phenotype_complete[, i], main = colnames(Chicken_microbiome_phenotype_complete)[i], col = "lightblue", xlab = "Center log values")
+}
+
+# Create dataframe for relative abundance trait
+Chicken_microbiome_CLR_phenotype_Abundance <- Chicken_microbiome_phenotype_complete[, c(1, 10:361)]
+```
+
+## Export the Phenotpe Dataframe
+
+Export both the Alpha-diversity and Relative Abundance Phenotypes as two differet dataframe for GWAS analysis (they have different covariates).
+```{r}
+# Alpha-diversity Phenotype
+
+# Create a text file with the phenotypes
+write_delim(Chicken_microbiome_Norm_phenotype_Community, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_Norm_PHENOTYPE_Community.txt")
+
+# Create a text file with the phenotypes (Without Headers)
+write_delim(Chicken_microbiome_Norm_phenotype_Community, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_Norm_PHENOTYPE_Community_without_headers.txt", col_names = FALSE)
+
+# Relative Abundance Phenotypes
+
+# Create a text file with the phenotypes
+write_delim(Chicken_microbiome_CLR_phenotype_Abundance, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance.txt")
+
+# Create a text file with the phenotypes (Without Headers)
+write_delim(Chicken_microbiome_CLR_phenotype_Abundance, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance_without_headers.txt", col_names = FALSE)
+```
+
+## New values + Shannon/Simpson/Pielou without outliers
+```{r}
+# Add ID first
+Chicken_microbiome_pheno_extra_2 <- as.data.frame(metadata$ID, row.names = c(sample_names(ps_rare)))
+colnames(Chicken_microbiome_pheno_extra_2) <- c("IID")
+
+# Add Chao1
+Chicken_microbiome_pheno_extra_2$Chao1 <- rich$Chao1
+
+# Add Inverse Simpson
+Chicken_microbiome_pheno_extra_2$InvSimp <- rich$InvSimpson
+
+# Add Simpson without outlier
+Chicken_microbiome_pheno_extra_2$Simpson_wo_out <- rich$Simpson
+Chicken_microbiome_pheno_extra_2$Simpson_wo_out[Chicken_microbiome_pheno_extra_2$Simpson_wo_out <= 0.85] <- NA
+
+# Add Shannon without outliers
+Chicken_microbiome_pheno_extra_2$Shannon_wo_out <- rich$Shannon
+Chicken_microbiome_pheno_extra_2$Shannon_wo_out[Chicken_microbiome_pheno_extra_2$Shannon_wo_out <= 3] <- NA
+
+# Add Pielou without outliers
+Chicken_microbiome_pheno_extra_2$pielou_wo_out <- p$pielou
+Chicken_microbiome_pheno_extra_2$pielou_wo_out[Chicken_microbiome_pheno_extra_2$pielou_wo_out <= 0.6] <- NA
+
+# Remove Sample ERC44: non present in genome data
+Chicken_microbiome_pheno_extra_2 <- Chicken_microbiome_pheno_extra_2[Chicken_microbiome_pheno_extra_2$IID != "ERC44", ]
+
+# Create a text file with the phenotypes (Without Headers)
+write_delim(Chicken_microbiome_pheno_extra_2, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_PHENO_extra_2_wo_outliers.txt", col_names = F)
+```
+
+## Create the covariate dataframes
+
+```{r, eval = F}
+# General covariates file
+write_delim(feral_covariates_microbiome_RUN1[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_RUN1))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_without_location.txt", col_names = F)
+
+# Covariate file without the PCs
+feral_covariates_microbiome_Without_PC <- feral_covariates_microbiome_RUN1[, !(names(feral_covariates_microbiome_RUN1) %in% c("calc_sex", "location.numeric", "Latitude", "Longitude", "latitude.longitude", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20"))]
+write_delim(feral_covariates_microbiome_Without_PC[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_Without_PC))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_without_PC_and_Loc.txt", col_names = F)
+
+# Covariate file with the first 10 PCs
+feral_covariates_microbiome_With_10PC <- feral_covariates_microbiome_RUN1[, !(names(feral_covariates_microbiome_RUN1) %in% c("calc_sex", "location.numeric", "Latitude", "Longitude", "latitude.longitude", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20"))]
+write_delim(feral_covariates_microbiome_With_10PC[c(1, (ncol(Chicken_microbiome_pheno) + 1):ncol(feral_covariates_microbiome_With_10PC))], file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_with_10PC_and_without_Loc.txt", col_names = F)
+
+# Covariates file for Richness
+# keep important covariants
+feral_covariates_microbiome_Richness <- feral_covariates_microbiome_RUN1[, (names(feral_covariates_microbiome_RUN1) %in% c("IID", "Sample.Type", "PC14", "PC15", "PC19", "Island"))]
+
+write_delim(feral_covariates_microbiome_Richness, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_cov_Richness.txt", col_names = F)
+```
+
+## Create an ID list for Genome dataset filtering
+```{r, eval = F}
+ID_feral <- as.data.frame(Metadata_cleaned_microbiome$ID)
+
+write_delim(ID_feral, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/ID_Feral_Chicken.txt", col_names = F)
+```
+
+## Save the new created object
+
+```{r, eval = F}
+# Erase all objects except metadata, Chicken_Microbiome_pheno, ps_object, save
+rm(list = ls()[!(ls() %in% c("Metadata_cleaned_microbiome", "ps", "save", "Chicken_microbiome_phenotype_complete", "Chicken_microbiome_CLR_phenotype_Abundance", "Chicken_microbiome_Norm_phenotype_Community", "ps_Norm", "ps_Norm_filt", "ps_ASV_GWAS_CLR", "ps_rare"))])
+
+save.image(file.path(save, "GWAS_phenotype_Data_RUN1.RData"))
+```

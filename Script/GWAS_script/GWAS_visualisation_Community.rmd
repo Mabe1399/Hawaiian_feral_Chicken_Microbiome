@@ -22,12 +22,26 @@ GWAS_output_Simpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_B
 GWAS_output_Shannon <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Shannon/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome-job9088533._CLR_GWAS-job9280634.assoc.txt")
 
 GWAS_output_Pielou <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Pielou/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra-job9425802.3_CLR_GWAS-job9425984.assoc.txt")
+
+GWAS_output_Chao1 <- read.delim("")
+
+GWAS_output_InvSimpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/InvSimpson/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.3_CLR_GWAS-job9614558.assoc.txt")
+
+# Import the one Without outliers
+
+GWAS_output_Simpson_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Simpson/without_outliers/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.4_CLR_GWAS-job9614627.assoc.txt")
+
+GWAS_output_Shannon_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Shannon/without_outliers/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.5_CLR_GWAS-job9614665.assoc.txt")
+
+GWAS_output_Pielou_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Pielou/")
 ```
 
 
 ## Simpson Metric GWAS
 
-### Correct the p-value for multiple testing using FDR
+### Full
+
+#### Correct the p-value for multiple testing using FDR
 ```{r}
 # adjust the p-value using FDR
 GWAS_output_Simpson$p_score_BH <- p.adjust(GWAS_output_Simpson$p_score, method = "BH")
@@ -41,7 +55,7 @@ GWAS_output_Simpson %>%
   top_n(n = -1, wt = p_score)
 ```
 
-### Make a Manhattan plot
+#### Make a Manhattan plot
 
 ```{r}
 ## using the qqman package
@@ -64,21 +78,75 @@ plot_manhattan(
 )
 ```
 
-### Q-Q Plot
+#### Q-Q Plot
 
 ```{r}
 # Use the qqman package
-qq(GWAS_output_Simpson$p_score, main = "Q-Q plot of GWAS p-values for Simpson Index", xlim = c(0, 7), ylim = c(0,12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+qq(GWAS_output_Simpson$p_score, main = "Q-Q plot of GWAS p-values for Simpson Index", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
 ```
-### Calculate Genomic Inflation
+#### Calculate Genomic Inflation
 ```{r}
 # Calculate genomic inflation factor
-qchisq(1-median(GWAS_output_Simpson$p_score),1)/qchisq(0.5,1)
+qchisq(1 - median(GWAS_output_Simpson$p_score), 1) / qchisq(0.5, 1)
+```
+
+
+### Without Outliers
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_Simpson_wo_out$p_score_BH <- p.adjust(GWAS_output_Simpson_wo_out$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_Simpson_wo_out %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_Simpson_wo_out %>%
+  top_n(n = -1, wt = p_score)
+```
+
+#### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_Simpson_wo_out, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_Simpson_wo_out$chr,
+  chrpositionvector = GWAS_output_Simpson_wo_out$ps,
+  values = -log10(GWAS_output_Simpson_wo_out$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for Simpson Index without outliers"
+)
+```
+
+#### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_Simpson_wo_out$p_score, main = "Q-Q plot of GWAS p-values for Simpson Index without outliers", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+#### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1 - median(GWAS_output_Simpson_wo_out$p_score), 1) / qchisq(0.5, 1)
 ```
 
 ## Shannon Metric GWAS
 
-### Correct the p-value for multiple testing using FDR
+### Full
+
+#### Correct the p-value for multiple testing using FDR
 ```{r}
 # adjust the p-value using FDR
 GWAS_output_Shannon$p_score_BH <- p.adjust(GWAS_output_Shannon$p_score, method = "BH")
@@ -92,7 +160,7 @@ GWAS_output_Shannon %>%
   top_n(n = -1, wt = p_score)
 ```
 
-### Make a Manhattan plot
+#### Make a Manhattan plot
 
 ```{r}
 ## using the qqman package
@@ -115,21 +183,76 @@ plot_manhattan(
 )
 ```
 
-### Q-Q Plot
+#### Q-Q Plot
 
 ```{r}
 # Use the qqman package
-qq(GWAS_output_Shannon$p_score, main = "Q-Q plot of GWAS p-values for Shannon Index", xlim = c(0, 7), ylim = c(0,12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+qq(GWAS_output_Shannon$p_score, main = "Q-Q plot of GWAS p-values for Shannon Index", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
 ```
 
-### Calculate Genomic Inflation
+#### Calculate Genomic Inflation
 ```{r}
 # Calculate genomic inflation factor
-qchisq(1-median(GWAS_output_Shannon$p_score),1)/qchisq(0.5,1)
+qchisq(1 - median(GWAS_output_Shannon$p_score), 1) / qchisq(0.5, 1)
 ```
+
+### Without Outliers
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_Shannon_wo_out$p_score_BH <- p.adjust(GWAS_output_Shannon_wo_out$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_Shannon_wo_out %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_Shannon_wo_out %>%
+  top_n(n = -1, wt = p_score)
+```
+
+#### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_Shannon_wo_out, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_Shannon_wo_out$chr,
+  chrpositionvector = GWAS_output_Shannon_wo_out$ps,
+  values = -log10(GWAS_output_Shannon_wo_out$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for Shannon Index without outliers"
+)
+```
+
+#### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_Shannon_wo_out$p_score, main = "Q-Q plot of GWAS p-values for Shannon Index without outliers", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+
+#### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1 - median(GWAS_output_Shannon_wo_out$p_score), 1) / qchisq(0.5, 1)
+```
+
 ## Pielou Metric GWAS
 
-### Correct the p-value for multiple testing using FDR
+### Full
+
+#### Correct the p-value for multiple testing using FDR
 ```{r}
 # adjust the p-value using FDR
 GWAS_output_Pielou$p_score_BH <- p.adjust(GWAS_output_Pielou$p_score, method = "BH")
@@ -143,7 +266,7 @@ GWAS_output_Pielou %>%
   top_n(n = -1, wt = p_score)
 ```
 
-### Make a Manhattan plot
+#### Make a Manhattan plot
 
 ```{r}
 ## using the qqman package
@@ -166,15 +289,172 @@ plot_manhattan(
 )
 ```
 
-### Q-Q Plot
+#### Q-Q Plot
 
 ```{r}
 # Use the qqman package
-qq(GWAS_output_Pielou$p_score, main = "Q-Q plot of GWAS p-values for Pielou Index", xlim = c(0, 7), ylim = c(0,12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+qq(GWAS_output_Pielou$p_score, main = "Q-Q plot of GWAS p-values for Pielou Index", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
 ```
 
-### Calculate Genomic Inflation
+#### Calculate Genomic Inflation
 ```{r}
 # Calculate genomic inflation factor
-qchisq(1-median(GWAS_output_Pielou$p_score),1)/qchisq(0.5,1)
+qchisq(1 - median(GWAS_output_Pielou$p_score), 1) / qchisq(0.5, 1)
+```
+
+### Without Outliers
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_Pielou_wo_out$p_score_BH <- p.adjust(GWAS_output_Pielou_wo_out$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_Pielou_wo_out %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_Pielou_wo_out %>%
+  top_n(n = -1, wt = p_score)
+```
+
+#### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_Pielou_wo_out, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_Pielou_wo_out$chr,
+  chrpositionvector = GWAS_output_Pielou_wo_out$ps,
+  values = -log10(GWAS_output_Pielou_wo_out$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for Pielou Index without outliers"
+)
+```
+
+#### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_Pielou_wo_out$p_score, main = "Q-Q plot of GWAS p-values for Pielou Index without outliers", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+
+#### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1 - median(GWAS_output_Pielou_wo_out$p_score), 1) / qchisq(0.5, 1)
+```
+
+## Chao1 Metric GWAS
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_Chao1$p_score_BH <- p.adjust(GWAS_output_Chao1$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_Chao1 %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_Chao1 %>%
+  top_n(n = -1, wt = p_score)
+```
+
+#### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_Chao1, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_Chao1$chr,
+  chrpositionvector = GWAS_output_Chao1$ps,
+  values = -log10(GWAS_output_Chao1$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for Chao1 Index"
+)
+```
+
+#### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_Chao1$p_score, main = "Q-Q plot of GWAS p-values for Chao1 Index", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+
+#### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1 - median(GWAS_output_Chao1$p_score), 1) / qchisq(0.5, 1)
+```
+
+
+## InvSimpson Metric GWAS
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_InvSimpson$p_score_BH <- p.adjust(GWAS_output_InvSimpson$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_InvSimpson %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_InvSimpson %>%
+  top_n(n = -1, wt = p_score)
+```
+
+#### Make a Manhattan plot
+
+```{r}
+## using the qqman package
+manhattan(GWAS_output_InvSimpson, chr = "chr", bp = "ps", snp = "rs", p = "p_score", logp = TRUE)
+```
+
+
+```{r}
+# Use Willian Manhattan plot function
+plot_manhattan(
+  chrnamevector = GWAS_output_InvSimpson$chr,
+  chrpositionvector = GWAS_output_InvSimpson$ps,
+  values = -log10(GWAS_output_InvSimpson$p_score_BH),
+  abovethreshold = -log10(0.05),
+  belowthreshold = -Inf,
+  colors = c("blue", "red"),
+  xlabel = "Chromosome",
+  ylabel = "LogPvalue",
+  plottitle = "Manhattan plot for InvSimpson Index"
+)
+```
+
+#### Q-Q Plot
+
+```{r}
+# Use the qqman package
+qq(GWAS_output_InvSimpson$p_score, main = "Q-Q plot of GWAS p-values for InvSimpson Index", xlim = c(0, 7), ylim = c(0, 12), pch = 18, col = "blue4", cex = 1.5, las = 1)
+```
+
+#### Calculate Genomic Inflation
+```{r}
+# Calculate genomic inflation factor
+qchisq(1 - median(GWAS_output_InvSimpson$p_score), 1) / qchisq(0.5, 1)
 ```

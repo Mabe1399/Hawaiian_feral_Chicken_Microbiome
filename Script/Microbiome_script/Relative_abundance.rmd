@@ -3,14 +3,15 @@
 ## Library
 
 ```{r, eval = F}
-library("phyloseq"); packageVersion("phyloseq")
-library("ggplot2"); packageVersion("ggplot2")
-
+library("phyloseq")
+packageVersion("phyloseq")
+library("ggplot2")
+packageVersion("ggplot2")
 ```
 ## Load the dataset
 
 ```{r, eval= F}
-load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline.RData")
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN1.RData")
 ```
 
 ## Set Theme
@@ -23,33 +24,33 @@ theme_set(theme_bw())
 
 ```{r, eval = F}
 barplot_phylum <- psmelt(ps_Norm)
-table(barplot_phylum$Phylum, useNA="ifany") # table of phyla
-barplot_phylum$Phylum[barplot_phylum$Phylum==""] <- "NA" # change if there are empty names to NA
-table(barplot_phylum$Phylum, useNA="ifany") # check
+table(barplot_phylum$Phylum, useNA = "ifany") # table of phyla
+barplot_phylum$Phylum[barplot_phylum$Phylum == ""] <- "NA" # change if there are empty names to NA
+table(barplot_phylum$Phylum, useNA = "ifany") # check
 
 # calculate sum of abundances
-taxa_summary <- aggregate(barplot_phylum$Abundance, by=list(Category= barplot_phylum$Phylum), FUN=sum)
-taxa_summary <- taxa_summary[order(-taxa_summary$x) ,]
+taxa_summary <- aggregate(barplot_phylum$Abundance, by = list(Category = barplot_phylum$Phylum), FUN = sum)
+taxa_summary <- taxa_summary[order(-taxa_summary$x), ]
 taxa_summary
 ```
 
 Print off top 5 Phyla
 
 ```{r, eval = F}
-list(as.character(taxa_summary[c(1:5),1]))
+list(as.character(taxa_summary[c(1:5), 1]))
 
-top_phyla <- as.character(c("Bacillota","Bacteroidota","Pseudomonadota","Actinomycetota","Verrucomicrobiota"))
+top_phyla <- as.character(c("Bacillota", "Bacteroidota", "Pseudomonadota", "Actinomycetota", "Verrucomicrobiota"))
 
 # Function
-'%!in%' <- function(x,y)!('%in%'(x,y))
+"%!in%" <- function(x, y) !("%in%"(x, y))
 
-# For-loop and if then function that checks to see if any of the names in the list "top" is in the 
+# For-loop and if then function that checks to see if any of the names in the list "top" is in the
 # barplot_phylum$Phylum column, leaves unchanged if it is, changes it to "Other" if it isn't
 # Re-name all uncommon phyla as "Other"
 for (i in seq_along(barplot_phylum$Phylum)) {
-  if (barplot_phylum$Phylum[i] %!in% top_phyla) {
-    barplot_phylum$Phylum[i] <- "Other"
-  }
+      if (barplot_phylum$Phylum[i] %!in% top_phyla) {
+            barplot_phylum$Phylum[i] <- "Other"
+      }
 }
 
 # Re-name NA:s as "Other"
@@ -59,31 +60,33 @@ barplot_phylum$Phylum[is.na(barplot_phylum$Phylum)] <- "Other"
 Change order so "Other" is last, change the rest to whichever order you prefer:
 
 ```{r, eval = F}
-barplot_phylum$Phylum <- factor(barplot_phylum$Phylum, levels= c("Bacillota","Bacteroidota","Pseudomonadota","Actinomycetota","Verrucomicrobiota", "Other"))
+barplot_phylum$Phylum <- factor(barplot_phylum$Phylum, levels = c("Bacillota", "Bacteroidota", "Pseudomonadota", "Actinomycetota", "Verrucomicrobiota", "Other"))
 levels(barplot_phylum$Phylum)
 ```
 
 ## Relative Abundance by samples
 
 ```{r, eval = F}
-ggplot(barplot_phylum, aes(x = Sample, y=Abundance, order = Phylum)) + 
-  geom_bar((aes(fill=Phylum)), stat="identity", position="stack", width = 1) +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_phylum, aes(x = Sample, y = Abundance, order = Phylum)) +
+      geom_bar((aes(fill = Phylum)), stat = "identity", position = "stack", width = 1) +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```
 
 ```{r, eval = F}
@@ -95,33 +98,35 @@ plot_bar(ps_Norm)
 
 ```{r, eval = F}
 # Not normalized
-plot_bar(ps, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack") #+ theme(legend.position = "none")
+plot_bar(ps, fill = "Phylum") + geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack") #+ theme(legend.position = "none")
 # Normalized data
-plot_bar(ps_Norm, fill = "Phylum") + geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack") #+ theme(legend.position = "none")
+plot_bar(ps_Norm, fill = "Phylum") + geom_bar(aes(color = Phylum, fill = Phylum), stat = "identity", position = "stack") #+ theme(legend.position = "none")
 ```
 
 ## Relative Abundance by island
 
 ```{r, eval = F}
-ggplot(barplot_phylum, aes(x = Sample, y=Abundance, order = Phylum)) + 
-  geom_bar((aes(fill=Phylum)), stat="identity", position="stack", width = 1) +
-  facet_grid(cols = vars(Island), scales = "free_x") +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_phylum, aes(x = Sample, y = Abundance, order = Phylum)) +
+      geom_bar((aes(fill = Phylum)), stat = "identity", position = "stack", width = 1) +
+      facet_grid(cols = vars(Island), scales = "free_x") +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```
 
 ```{r, eval = F}
@@ -135,25 +140,27 @@ plot_bar(ps_Norm, "samples", fill = "species", facet_grid = ~island)
 ## Relative Abundance by sex
 
 ```{r, eval = F}
-ggplot(barplot_phylum, aes(x = Sample, y=Abundance, order = Phylum)) + 
-  geom_bar((aes(fill=Phylum)), stat="identity", position="stack", width = 1) +
-  facet_grid(cols = vars(Sex), scales = "free_x") +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_phylum, aes(x = Sample, y = Abundance, order = Phylum)) +
+      geom_bar((aes(fill = Phylum)), stat = "identity", position = "stack", width = 1) +
+      facet_grid(cols = vars(Sex), scales = "free_x") +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```
 
 ```{r, eval = F}
@@ -167,25 +174,27 @@ plot_bar(ps_Norm, "Sex", fill = "species", facet_grid = ~island)
 ## Relative Abundance by Sample Type
 
 ```{r, eval = F}
-ggplot(barplot_phylum, aes(x = Sample, y=Abundance, order = Phylum)) + 
-  geom_bar((aes(fill=Phylum)), stat="identity", position="stack", width = 1) +
-  facet_grid(cols = vars(Sample.Type), scales = "free_x") +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_phylum, aes(x = Sample, y = Abundance, order = Phylum)) +
+      geom_bar((aes(fill = Phylum)), stat = "identity", position = "stack", width = 1) +
+      facet_grid(cols = vars(Sample.Type), scales = "free_x") +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```
 
 ```{r, eval = F}
@@ -199,8 +208,6 @@ plot_bar(ps_Norm, "Sex", fill = "species", facet_grid = ~island)
 
 ```{r}
 # Look how to do it but maybe nice idea
-
-
 ```
 
 ## Relative Abundance at Family Level
@@ -209,33 +216,33 @@ plot_bar(ps_Norm, "Sex", fill = "species", facet_grid = ~island)
 
 ```{r, eval = F}
 barplot_fam <- psmelt(ps_Norm)
-table(barplot_fam$Family, useNA="ifany") # table of phyla
-barplot_fam$Family[barplot_fam$Family==""] <- "NA" # change if there are empty names to NA
-table(barplot_fam$Family, useNA="ifany") # check
+table(barplot_fam$Family, useNA = "ifany") # table of phyla
+barplot_fam$Family[barplot_fam$Family == ""] <- "NA" # change if there are empty names to NA
+table(barplot_fam$Family, useNA = "ifany") # check
 
 # calculate sum of abundances
-taxa_summary <- aggregate(barplot_fam$Abundance, by=list(Category= barplot_fam$Family), FUN=sum)
-taxa_summary <- taxa_summary[order(-taxa_summary$x) ,]
+taxa_summary <- aggregate(barplot_fam$Abundance, by = list(Category = barplot_fam$Family), FUN = sum)
+taxa_summary <- taxa_summary[order(-taxa_summary$x), ]
 taxa_summary
 ```
 
 Print off top 10 Family
 
 ```{r, eval = F}
-list(as.character(taxa_summary[c(1:10),1]))
+list(as.character(taxa_summary[c(1:10), 1]))
 
-top_fam <- as.character(c("bacteroidaceae","Lachnospiraceae","Rikenellaceae","Ruminococcaceae","Succinivibrionaceae","Prevotellaceae","Lactobacillaceae","Oscillospiraceae","Coriobacteriaceae","Atopobiaceae"))
+top_fam <- as.character(c("bacteroidaceae", "Lachnospiraceae", "Rikenellaceae", "Ruminococcaceae", "Succinivibrionaceae", "Prevotellaceae", "Lactobacillaceae", "Oscillospiraceae", "Coriobacteriaceae", "Atopobiaceae"))
 
 # Function
-'%!in%' <- function(x,y)!('%in%'(x,y))
+"%!in%" <- function(x, y) !("%in%"(x, y))
 
-# For-loop and if then function that checks to see if any of the names in the list "top" is in the 
+# For-loop and if then function that checks to see if any of the names in the list "top" is in the
 # barplot_phylum$Phylum column, leaves unchanged if it is, changes it to "Other" if it isn't
 # Re-name all uncommon phyla as "Other"
 for (i in seq_along(barplot_fam$Family)) {
-  if (barplot_fam$Family[i] %!in% top_fam) {
-    barplot_fam$Family[i] <- "Other"
-  }
+      if (barplot_fam$Family[i] %!in% top_fam) {
+            barplot_fam$Family[i] <- "Other"
+      }
 }
 
 # Re-name NA:s as "Other"
@@ -245,53 +252,57 @@ barplot_fam$Family[is.na(barplot_fam$Family)] <- "Other"
 Change order so "Other" is last, change the rest to whichever order you prefer:
 
 ```{r, eval = F}
-barplot_fam$Family <- factor(barplot_fam$Family, levels= c("bacteroidaceae","Lachnospiraceae","Rikenellaceae","Ruminococcaceae","Succinivibrionaceae","Prevotellaceae","Lactobacillaceae","Oscillospiraceae","Coriobacteriaceae","Atopobiaceae", "Other"))
+barplot_fam$Family <- factor(barplot_fam$Family, levels = c("bacteroidaceae", "Lachnospiraceae", "Rikenellaceae", "Ruminococcaceae", "Succinivibrionaceae", "Prevotellaceae", "Lactobacillaceae", "Oscillospiraceae", "Coriobacteriaceae", "Atopobiaceae", "Other"))
 levels(barplot_fam$Family)
 ```
 
 ## Relative Abundance by samples
 
 ```{r, eval = F}
-ggplot(barplot_fam, aes(x = Sample, y=Abundance, order = Family)) + 
-  geom_bar((aes(fill=Family)), stat="identity", position="stack", width = 1) +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_fam, aes(x = Sample, y = Abundance, order = Family)) +
+      geom_bar((aes(fill = Family)), stat = "identity", position = "stack", width = 1) +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```
 
 ## Relative Abundance by island
 
 ```{r, eval = F}
-ggplot(barplot_fam, aes(x = Sample, y=Abundance, order = Family)) + 
-  geom_bar((aes(fill=Family)), stat="identity", position="stack", width = 1) +
-  facet_grid(cols = vars(Island), scales = "free_x") +
-  ylab("Relative abundance") + xlab("Sample") + theme_bw() #+
-  # coord_flip() + # comment out this line if you want vertical bars
-  #theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-  #theme(axis.title.x = element_text(size=13), 
-        #axis.title.y = element_text(size=13),
-        #axis.text.y = element_text(size=12, color ="black"), 
-        #axis.text.x = element_text(size=6)) +
-  #theme(legend.title = element_text(size=14), 
-        #legend.text = element_text(size=12),
-        #legend.key.size=unit(0.7,"cm") ) +
-  #theme(axis.text.x = element_text(angle = 90)) +
-  #scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) + 
-  #facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-  #scale_y_continuous(expand = c(0,0)) +
-  #theme(strip.text.x = element_text(size = 8, color = "black"), 
-        #strip.background = element_rect(fill = "#ffffff"))
+ggplot(barplot_fam, aes(x = Sample, y = Abundance, order = Family)) +
+      geom_bar((aes(fill = Family)), stat = "identity", position = "stack", width = 1) +
+      facet_grid(cols = vars(Island), scales = "free_x") +
+      ylab("Relative abundance") +
+      xlab("Sample") +
+      theme_bw() #+
+# coord_flip() + # comment out this line if you want vertical bars
+# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+# theme(axis.title.x = element_text(size=13),
+# axis.title.y = element_text(size=13),
+# axis.text.y = element_text(size=12, color ="black"),
+# axis.text.x = element_text(size=6)) +
+# theme(legend.title = element_text(size=14),
+# legend.text = element_text(size=12),
+# legend.key.size=unit(0.7,"cm") ) +
+# theme(axis.text.x = element_text(angle = 90)) +
+# scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
+# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
+# scale_y_continuous(expand = c(0,0)) +
+# theme(strip.text.x = element_text(size = 8, color = "black"),
+# strip.background = element_rect(fill = "#ffffff"))
 ```

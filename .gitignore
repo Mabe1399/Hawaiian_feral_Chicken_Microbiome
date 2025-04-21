@@ -3,6 +3,7 @@ Backup_workspace/
 Analysis/GWAS/
 Analysis/Quality_Control/
 Analysis/Phylogeny/
+Analysis/PLINK/
 multiqc_data/
 Database/
 GWAS_code_sweeps_Marisa_example/

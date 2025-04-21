@@ -1,0 +1,109 @@
+# Covariate exploration
+
+This Script is made to explore and select covariate which are gonna be added to the model (linear model).
+
+The file will contain two section:
+
+- Covariate selection for Alpha-diversity GWAS
+- Covariate selection for Single-Taxa GWAS
+
+## Library
+
+```{r}
+# Module
+library(readr)
+library(ggplot2)
+library(ppcor)
+library(corrplot)
+library(dplyr)
+```
+
+## Load data
+
+```{r}
+# Object containing all the ps object
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN1.RData")
+
+# Load the Phenotype Data
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/GWAS_phenotype_Data_RUN1.RData")
+```
+
+## Covariate selection Alpha-diversity GWAS
+
+As mentionned in multiple articles, alpha-diversity can have mutliple environmental and host variable which can explain it. 
+Because we aim to build a model based on using as many relevant of these variable as covariate to detect genomic variants, we should explore them and look at their impact on alpha-div.
+
+variable available:
+
+-   Sample.Type
+-   Island
+-   Body mass
+-   Age Category
+-   Sex
+
+### Create a merged dataframe containing phenotype and Covariate
+```{r}
+# Merge Dataset
+Merge_community_Phenotype_Metadata <- merge(Chicken_microbiome_Norm_phenotype_Community, Metadata_cleaned_microbiome, by = "ID")
+```
+
+### Build and test variable agianst alpha-diversity
+
+```{r}
+# Build linear model using Sample.type variable
+Richness_lm <- lm(Chao1 ~ Sample.Type + PC1, data = Merge_community_Phenotype_Metadata)
+summary(Richness_lm)
+
+# Visualise the residuals in Histogram
+qplot(Richness_lm$residual,
+    geom = "histogram",
+    bins = 50
+) +
+    labs(
+        title = "Histogram of residuals",
+        x = "residual"
+    )
+```
+
+## Covariate selection Single Taxa GWAS
+
+variable available:
+
+-   Sample.Type
+-   Island
+-   Body mass
+-   Age Category
+-   Sex
+
+### Create a merged dataframe containing phenotype and Covariate
+```{r}
+# Merge Dataset
+Merge_Abundance_Phenotype_Metadata <- merge(Chicken_microbiome_CLR_phenotype_Abundance, Metadata_cleaned_microbiome, by = "ID")
+```
+
+### Build and test variable against beta-diversity (aitchinson)
+
+Build a linear model against the PC of Aitchinson beta-diversity allows us to merge the variability of the multiple taxa tested.
+
+### Calculate the PC of the beta diversite
+```{r}
+# Build using the GWAS selected taxa
+ord_clr <- ordinate(ps_ASV_GWAS_CLR, "PCoA", "euclidean")
+PCA_aitch <- plot_ordination(ps_ASV_GWAS_CLR, ord_clr, justDF = T)
+head(PCA_aitch)
+```
+```{r}
+# Build linear model using Sample.type variable
+Abundance_lm <- lm( ~ , data = Merge_Abundance_Phenotype_Metadata)
+summary(Abundance_lm)
+
+# Visualise the residuals in Histogram
+qplot(Abundance_lm$residual,
+    geom = "histogram",
+    bins = 50
+) +
+    labs(
+        title = "Histogram of residuals",
+        x = "residual"
+    )
+```

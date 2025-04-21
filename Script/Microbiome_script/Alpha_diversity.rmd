@@ -50,7 +50,7 @@ plot_richness(ps_rare, x = "Sample.Type", measures = c("Observed", "Shannon", "S
 ### Metrics Used
 
 ```{r}
-Boxplot <- plot_richness(ps_rare, measures = "Chao1")
+Boxplot <- plot_richness(ps_rare_loc_above_5, measures = "Observed")
 ```
 
 ### Plot for different variable
@@ -122,7 +122,7 @@ ggplot(Boxplot$data, aes(x = location.numeric , y = value, fill = location.numer
   geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
   geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
   ylab("Richness") + xlab("Collection Location") + labs(fill = "Collection Location") +
-  facet_wrap(~Island, scales = "free") +
+  facet_wrap(~Island, scale = "free_x") +
   #scale_fill_manual(values = col_gir) + 
   #scale_color_manual(values = col_gir) +
   theme_bw() + 
@@ -151,12 +151,12 @@ alpha_div <- sample_data(ps_rare)
 alpha_div <- cbind(alpha_div, rich)
 
 # Create a new ps rare object without the outliers (n= 5)
-ps_rare_wo_outliers <- subset_samples(ps_rare, ID %in% c(alpha_div$ID[alpha_div$Simpson >= 0.85]))
+ps_rare_wo_outliers <- subset_samples(ps_rare, ID %in% c(alpha_div$ID[alpha_div$Simpson >= 0.90]))
 ```
 
 ### Metrics Used
 ```{r}
-Boxplot <- plot_richness(ps_rare_wo_outliers, measures = "Chao1")
+Boxplot <- plot_richness(ps_rare, measures = "Simpson")
 ```
 
 ### Plots for different variable
@@ -246,6 +246,42 @@ ggplot(Boxplot$data, aes(x = Body.mass..g. , y = value)) +
   ylab("Richness") + xlab("Body mass (g)") +
   theme_bw() + 
   theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
+  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank())
+```
+
+## Alpha-diversity Richness for location wth location > 5
+
+###  Create a dataset based only on individuals wth location > 5
+
+```{r}
+Metadata_loc_above_5_ind <- Metadata_cleaned_microbiome %>%
+    group_by(location.numeric) %>%
+    filter(n() > 5)
+
+ps_rare_loc_above_5 <- prune_samples(as.character(Metadata_loc_above_5_ind$Sample.Name), ps_rare)
+```
+
+### Metrics Used
+```{r}
+Boxplot <- plot_richness(ps_rare_loc_above_5, measures = "Shannon")
+```
+
+### Plots for Location
+
+```{r}
+# Boxplot By Location Sampling
+ggplot(Boxplot$data, aes(x = location.numeric , y = value, fill = location.numeric)) +
+  #geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
+  #geom_boxplot(width= 0.2, fill = "white") +
+  geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
+  ylab("Richness") + xlab("Collection Location") + labs(fill = "Collection Location") +
+  facet_wrap(~Island, scales = "free_x") +
+  #scale_fill_manual(values = col_gir) + 
+  #scale_color_manual(values = col_gir) +
+  theme_bw() + 
+  theme(legend.position = "none") +
+  theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) +
   theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank())
 ```
 

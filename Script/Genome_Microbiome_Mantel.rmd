@@ -1,0 +1,67 @@
+# Compare the Genome and the microbiome of the feral Chicken in a more global scale
+
+To compare both the genome and the microbiome of the individuals, we can compare the similarity matrix of the genome against the one of the Microbiome (beta-diversity) by using a Mantel test
+
+## Library
+```{r}
+library(phyloseq)
+library(vegan)
+library(ggplot2)
+library(plyr)
+```
+
+## Load the Data
+
+```{r}
+# Load the Backup worskspace containing the Microbiome data
+load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Backup_workspace/Decomtamination_pipeline_RUN1.RData")
+```
+
+## Import the Genome Similarity matrix
+
+```{r}
+# Import the Similarity matrix and ID file
+Genome_Matrix <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/PLINK/Similarity_MAtrix/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink-job9079824.PCA-job9668431.mibs", header = FALSE)
+
+ID_File <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/PLINK/Similarity_MAtrix/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink-job9079824.PCA-job9668431.mibs.id", header = FALSE)
+
+# Format column and rownames
+rownames(Genome_Matrix) <- ID_File$V1
+colnames(Genome_Matrix) <- ID_File$V2
+```
+
+## Create the distance matrix for the Microbiome Data
+
+```{r}
+# Convert the Normalized ps object (ps_Norm) to distance metrics
+
+# Bray Curtis
+Microbiome_dist_BC <- phyloseq::distance(ps_Norm, method = "bray")
+
+# Aitchinson
+Microbiome_dist_CLR <- phyloseq::distance(ps_ASV_GWAS_CLR, method = "euclidean")
+```
+
+## Order Genomic matrix based on Microbiome Matrix
+```{r}
+# Reorder column
+Genome_Matrix <- Genome_Matrix[, c(sample_data(ps_Norm)$ID)]
+# Reorder Row
+Genome_Matrix <- Genome_Matrix[c(sample_data(ps_Norm)$ID), ]
+```
+
+## Realise a Mantel test based on Spearman for non normality (microbiome is compositional)
+
+```{r}
+# MANTEL tests for Genome vs Microbiome
+# If significant, results suggest that there is a statistically significant correlation
+# between Genome distance and microbial distances.
+# I.e. The more diff GENOME you have, the more diff your microbial communities are.
+set.seed(386)
+
+# BC
+mantel(Genome_Matrix, Microbiome_dist_BC, method = "spearman", permutations = 999)
+
+# clr
+mantel(Genome_Matrix, Microbiome_dist_CLR, method = "spearman", permutations = 999)
+```
