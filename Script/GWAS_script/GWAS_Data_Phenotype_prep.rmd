@@ -34,15 +34,23 @@ Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_comp
 p <- microbiome::evenness(otu_table(ps_rare), index = c("simpson", "pielou"))
 Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, p)
 
-# Relative abundance of the set core microbiome
-ps_ASV_GWAS <- core(ps_Norm, detection = 0, prevalence = 0.5) # 50% percent see if good threashold
-ps_ASV_GWAS <- transform_sample_counts(ps_ASV_GWAS, function(x) x / sum(x))
+# Single Taxa Relative abundance
+## Merge at the Genus level
+ps_Genus <- tax_glom(ps, "Genus")
 
-# Transform the core microbiome in center log ratio (CLR), Help with normalization
-ps_ASV_GWAS_CLR <- microbiome::transform(ps_ASV_GWAS, "clr")
+## Change the Name from ASV to Genus Name
+taxa_names(ps_Genus) <- tax_table(ps_Genus)[, "Genus"]
+otu_table(ps_Genus)[1:5, 1:5] # Check that everything works
+
+# Filter the Genus with >50% prevalence
+ps_Genus_GWAS <- core(ps_Genus, detection = 0, prevalence = 0.5)
+
+# Transform in center log ratio (CLR)
+ps_Genus_GWAS_CLR <- microbiome::transform(ps_Genus_GWAS, "clr")
+otu_table(ps_Genus_GWAS_CLR)[1:5, 1:5] # Check that everything works
 
 # Add to the phenotype
-Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, otu_table(ps_ASV_GWAS_CLR))
+Chicken_microbiome_phenotype_complete <- cbind(Chicken_microbiome_phenotype_complete, otu_table(ps_Genus_GWAS_CLR))
 
 # Remove Sample ERC44: non present in genome data
 Chicken_microbiome_phenotype_complete <- Chicken_microbiome_phenotype_complete[Chicken_microbiome_phenotype_complete$ID != "ERC44", ]
@@ -80,6 +88,10 @@ for (i in 1:ncol(normalized_metrics)) {
 }
 normalized_metrics_df <- as.data.frame(normalized_metrics)
 
+# Test for Normal distribution using shapiro-wilk normality test
+shapiro.test(Chicken_microbiome_Norm_phenotype_Community$Chao1)
+
+
 # Create a new Phenotype dataframe with the Normalized Data
 Chicken_microbiome_Norm_phenotype_Community <- cbind(Chicken_microbiome_phenotype_complete$ID, normalized_metrics_df)
 colnames(Chicken_microbiome_Norm_phenotype_Community)[1] <- "ID"
@@ -95,8 +107,11 @@ for (i in 10:18) {
     hist(Chicken_microbiome_phenotype_complete[, i], main = colnames(Chicken_microbiome_phenotype_complete)[i], col = "lightblue", xlab = "Center log values")
 }
 
+# Test for Normal distribution using shapiro-wilk normality test
+shapiro.test(Chicken_microbiome_CLR_phenotype_Abundance$Mediterraneibacter)
+
 # Create dataframe for relative abundance trait
-Chicken_microbiome_CLR_phenotype_Abundance <- Chicken_microbiome_phenotype_complete[, c(1, 10:361)]
+Chicken_microbiome_CLR_phenotype_Abundance <- Chicken_microbiome_phenotype_complete[, c(1, 10:128)]
 ```
 
 ## Export the Phenotpe Dataframe
@@ -114,10 +129,27 @@ write_delim(Chicken_microbiome_Norm_phenotype_Community, file = "/Users/matiasbe
 # Relative Abundance Phenotypes
 
 # Create a text file with the phenotypes
-write_delim(Chicken_microbiome_CLR_phenotype_Abundance, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance.txt")
+write_csv(Chicken_microbiome_CLR_phenotype_Abundance, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance.txt", quote = "all")
 
 # Create a text file with the phenotypes (Without Headers)
 write_delim(Chicken_microbiome_CLR_phenotype_Abundance, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance_without_headers.txt", col_names = FALSE)
+```
+
+## After Transposition Reordering (MatrixEQTL needs same order sample)
+```{r}
+# Load the Genome  file sample order
+Order_sample <- scan("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Sample_ID_order_Genome.txt", what = character())
+
+# Change the first position by "ID"
+Order_sample[1] <- "ID"
+
+# reorder the Covariate and Phenotype file
+MatrixQTL_Phenotype <- read_delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance_MatrixQTL.txt")
+
+MatrixQTL_Phenotype <- MatrixQTL_Phenotype[, Order_sample]
+
+# Overwrite Previous Phenotype File
+write_csv(MatrixQTL_Phenotype, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Feral_Chicken_CLR_PHENOTYPE_Abundance_MatrixQTL.txt", quote = "all")
 ```
 
 ## New values + Shannon/Simpson/Pielou without outliers

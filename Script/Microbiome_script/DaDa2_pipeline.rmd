@@ -215,7 +215,7 @@ head(taxa.print)
 
 # Check percentage of assignement by level.
 
-stat <- as.matrix(colSums(is.na(taxa.print)) / 28896 * 100)
+stat <- as.matrix(100 - colSums(is.na(taxa.print)) / 19585 * 100)
 colnames(stat) <- "Percentage"
 
 stat

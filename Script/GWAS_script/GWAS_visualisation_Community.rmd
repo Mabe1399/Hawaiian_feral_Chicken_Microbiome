@@ -17,23 +17,19 @@ source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-
 ## Import the data
 ```{r, eval = F}
 # Import the GEMMA output for different trait
-GWAS_output_Simpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Simpson/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra-job9425802.2_CLR_GWAS-job9425983.assoc.txt")
+GWAS_output_Simpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/Simpson/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.6_Community_GWAS-job9738904.assoc.txt")
 
-GWAS_output_Shannon <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Shannon/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome-job9088533._CLR_GWAS-job9280634.assoc.txt")
+GWAS_output_Shannon <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/Shannon/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.5_Community_GWAS-job9738903.assoc.txt")
 
-GWAS_output_Pielou <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Pielou/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra-job9425802.3_CLR_GWAS-job9425984.assoc.txt")
+GWAS_output_Pielou <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/pielou/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.9_Community_GWAS-job9729436.assoc.txt")
 
-GWAS_output_Chao1 <- read.delim("")
+GWAS_output_Chao1 <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/Chao1/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.3_Community_GWAS-job9738428.assoc.txt")
 
-GWAS_output_InvSimpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/InvSimpson/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.3_CLR_GWAS-job9614558.assoc.txt")
+GWAS_output_InvSimpson <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/InvSimpson/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.7_Community_GWAS-job9738905.assoc.txt")
 
-# Import the one Without outliers
+GWAS_output_Observed <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/Observed/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.2_Community_GWAS-job9738427.assoc.txt")
 
-GWAS_output_Simpson_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Simpson/without_outliers/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.4_CLR_GWAS-job9614627.assoc.txt")
-
-GWAS_output_Shannon_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Shannon/without_outliers/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_extra_2-job9611984.5_CLR_GWAS-job9614665.assoc.txt")
-
-GWAS_output_Pielou_wo_out <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Pielou/")
+GWAS_output_simpson_evenness <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Community/simpson_evenness/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_Community-job9729389.8_Community_GWAS-job9738952.assoc.txt")
 ```
 
 
@@ -457,4 +453,40 @@ qq(GWAS_output_InvSimpson$p_score, main = "Q-Q plot of GWAS p-values for InvSimp
 ```{r}
 # Calculate genomic inflation factor
 qchisq(1 - median(GWAS_output_InvSimpson$p_score), 1) / qchisq(0.5, 1)
+```
+
+## Observed Metric GWAS
+
+### Full
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_Observed$p_score_BH <- p.adjust(GWAS_output_Observed$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_Observed %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_Observed %>%
+  top_n(n = -1, wt = p_score)
+```
+
+## simpson evenness Metric GWAS
+
+### Full
+
+#### Correct the p-value for multiple testing using FDR
+```{r}
+# adjust the p-value using FDR
+GWAS_output_simpson_evenness$p_score_BH <- p.adjust(GWAS_output_simpson_evenness$p_score, method = "BH")
+
+# Check if any p-values is above the threashold of q < 0.05
+nrow(GWAS_output_simpson_evenness %>%
+  filter(p_score_BH < 0.05))
+
+# Find top SNP
+GWAS_output_simpson_evenness %>%
+  top_n(n = -1, wt = p_score)
 ```

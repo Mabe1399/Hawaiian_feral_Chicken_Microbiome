@@ -51,7 +51,7 @@ Merge_community_Phenotype_Metadata <- merge(Chicken_microbiome_Norm_phenotype_Co
 
 ```{r}
 # Build linear model using Sample.type variable
-Richness_lm <- lm(Chao1 ~ Sample.Type + PC1, data = Merge_community_Phenotype_Metadata)
+Richness_lm <- lm(Simpson ~ Sample.Type + Island, data = Merge_community_Phenotype_Metadata)
 summary(Richness_lm)
 
 # Visualise the residuals in Histogram
@@ -88,13 +88,13 @@ Build a linear model against the PC of Aitchinson beta-diversity allows us to me
 ### Calculate the PC of the beta diversite
 ```{r}
 # Build using the GWAS selected taxa
-ord_clr <- ordinate(ps_ASV_GWAS_CLR, "PCoA", "euclidean")
-PCA_aitch <- plot_ordination(ps_ASV_GWAS_CLR, ord_clr, justDF = T)
+ord_clr <- ordinate(ps_Genus_GWAS_CLR, "PCoA", "euclidean")
+PCA_aitch <- plot_ordination(ps_Genus_GWAS_CLR, ord_clr, justDF = T)
 head(PCA_aitch)
 ```
 ```{r}
 # Build linear model using Sample.type variable
-Abundance_lm <- lm( ~ , data = Merge_Abundance_Phenotype_Metadata)
+Abundance_lm <- lm(Mediterraneibacter ~ Age_category, data = Merge_Abundance_Phenotype_Metadata)
 summary(Abundance_lm)
 
 # Visualise the residuals in Histogram
@@ -106,4 +106,48 @@ qplot(Abundance_lm$residual,
         title = "Histogram of residuals",
         x = "residual"
     )
+```
+
+## Export Selected Covariate Dataframe
+
+```{r}
+# Community covariates dataframe
+Covariates_Communtiy_dataframe <- Metadata_cleaned_microbiome[c(1:2, 9:13)]
+
+## Change the covariates to Binary
+Covariates_Communtiy_dataframe$Sample.Type <- c(Scrape = 2, Cecum = 1)[Covariates_Communtiy_dataframe$Sample.Type]
+
+## Export the Final Dataframe
+write_delim(Covariates_Communtiy_dataframe, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Community_Without_header.txt", col_names = F)
+write_delim(Covariates_Communtiy_dataframe, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Community.txt")
+```
+
+```{r}
+# Abundance covariates dataframe
+Covariates_Abundance_dataframe <- Metadata_cleaned_microbiome[c(1:2, 4, 9:13)]
+
+## Change the covariates to Binary
+Covariates_Abundance_dataframe$Sample.Type <- c(Scrape = 1, Cecum = 0)[Covariates_Abundance_dataframe$Sample.Type]
+Covariates_Abundance_dataframe$Island <- c(Bermuda = 1, Kauai = 0)[Covariates_Abundance_dataframe$Island]
+
+## Export the Final Dataframe
+write_csv(Covariates_Abundance_dataframe, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Abundance_Without_header.txt", col_names = F)
+write_csv(Covariates_Abundance_dataframe, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Abundance.txt", quote = "all")
+```
+
+## After Transposition Reordering (MatrixEQTL needs same order sample)
+```{r}
+# Load the Genome  file sample order
+Order_sample <- scan("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Sample_ID_order_Genome.txt", what = character())
+
+# Change the first position by "ID"
+Order_sample[1] <- "ID"
+
+# reorder the Covariate file
+MatrixQTL_Covariate <- read_delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Abundance_MatrixQTL.txt")
+
+MatrixQTL_Covariate <- MatrixQTL_Covariate[, Order_sample]
+
+# Overwrite Previous Phenotype File
+write_csv(MatrixQTL_Covariate, file = "/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Data/GWAS_DATA/Chicken_microbiome_Covariates_Abundance_MatrixQTL.txt", quote = "all")
 ```

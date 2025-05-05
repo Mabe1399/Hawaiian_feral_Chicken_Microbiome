@@ -323,7 +323,7 @@ ggplot(g, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
 
 ### Conversion to CLR values
 ```{r}
-ps_CLR <- microbiome::transform(ps_Norm, "clr")
+ps_CLR <- microbiome::transform(ps, "clr")
 ```
 
 ```{r}

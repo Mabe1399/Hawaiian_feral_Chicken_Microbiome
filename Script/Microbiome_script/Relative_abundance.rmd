@@ -204,29 +204,24 @@ plot_bar(ps_Norm, x = "Sex", fill = "species")
 # Abundance between sex and island
 plot_bar(ps_Norm, "Sex", fill = "species", facet_grid = ~island)
 ```
-## Relative Abundance by community
 
-```{r}
-# Look how to do it but maybe nice idea
-```
+## Relative Abundance at genus level for the "core" microbiome
 
-## Relative Abundance at Family Level
-
-## Top Family check
+## Top Genus check
 
 ```{r, eval = F}
-barplot_fam <- psmelt(ps_Norm)
-table(barplot_fam$Family, useNA = "ifany") # table of phyla
-barplot_fam$Family[barplot_fam$Family == ""] <- "NA" # change if there are empty names to NA
-table(barplot_fam$Family, useNA = "ifany") # check
+barplot_core_genus <- psmelt(ps_ASV_GWAS)
+table(barplot_core_genus$Genus, useNA = "ifany") # table of phyla
+barplot_core_genus$Genus[barplot_core_genus$Genus == ""] <- "NA" # change if there are empty names to NA
+table(barplot_core_genus$Genus, useNA = "ifany") # check
 
 # calculate sum of abundances
-taxa_summary <- aggregate(barplot_fam$Abundance, by = list(Category = barplot_fam$Family), FUN = sum)
+taxa_summary <- aggregate(barplot_core_genus$Abundance, by = list(Category = barplot_core_genus$Genus), FUN = sum)
 taxa_summary <- taxa_summary[order(-taxa_summary$x), ]
 taxa_summary
 ```
 
-Print off top 10 Family
+Print off top 10 Genus
 
 ```{r, eval = F}
 list(as.character(taxa_summary[c(1:10), 1]))
@@ -259,26 +254,27 @@ levels(barplot_fam$Family)
 ## Relative Abundance by samples
 
 ```{r, eval = F}
-ggplot(barplot_fam, aes(x = Sample, y = Abundance, order = Family)) +
-      geom_bar((aes(fill = Family)), stat = "identity", position = "stack", width = 1) +
+ggplot(barplot_core_genus, aes(x = Sample, y = Abundance, order = Genus)) +
+      geom_bar((aes(fill = Genus)), stat = "identity", position = "stack", width = 1) +
       ylab("Relative abundance") +
       xlab("Sample") +
-      theme_bw() #+
-# coord_flip() + # comment out this line if you want vertical bars
-# theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
-# theme(axis.title.x = element_text(size=13),
-# axis.title.y = element_text(size=13),
-# axis.text.y = element_text(size=12, color ="black"),
-# axis.text.x = element_text(size=6)) +
-# theme(legend.title = element_text(size=14),
-# legend.text = element_text(size=12),
-# legend.key.size=unit(0.7,"cm") ) +
-# theme(axis.text.x = element_text(angle = 90)) +
+      theme_bw() +
+      #coord_flip() + # comment out this line if you want vertical bars
+      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank()) +
+      theme(axis.title.x = element_text(size=13),
+      axis.title.y = element_text(size=13),
+      axis.text.y = element_text(size=12, color ="black"),
+      axis.text.x = element_text(size=6)) +
+      theme(legend.position = "False")
+      #theme(legend.title = element_text(size=14),
+      #legend.text = element_text(size=12),
+      #legend.key.size=unit(0.7,"cm") ) +
+      theme(axis.text.x = element_text(angle = 90)) +
 # scale_fill_manual(values=(color_list[c(10,6,8,5,4,3)])) +
-# facet_grid(~Sample_type, scales="free", space="free") + # change this per your liking!
-# scale_y_continuous(expand = c(0,0)) +
-# theme(strip.text.x = element_text(size = 8, color = "black"),
-# strip.background = element_rect(fill = "#ffffff"))
+      facet_grid(~Island, scales="free", space="free") + # change this per your liking!
+      scale_y_continuous(expand = c(0,0)) +
+      theme(strip.text.x = element_text(size = 8, color = "black"),
+      #trip.background = element_rect(fill = "#ffffff"))
 ```
 
 ## Relative Abundance by island

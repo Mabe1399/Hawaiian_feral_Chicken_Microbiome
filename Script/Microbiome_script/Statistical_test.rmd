@@ -142,7 +142,7 @@ ps_dist_matrix <- phyloseq::distance(ps_Norm, method = "bray")
 
 # Set the distance metrics (Aitchinson) for the matrix
 # First convert to CLR
-ps_CLR <- microbiome::transform(ps_Norm, "clr")
+ps_CLR <- microbiome::transform(ps, "clr")
 ps_dist_matrix_clr <- phyloseq::distance(ps_CLR, method = "euclidean")
 
 # Set the distance metrics for the matrix
@@ -159,7 +159,7 @@ The Adonis test is a version of a PERMANOVA. It is essentially a test for differ
 
 ```{r, eval = F}
 # Do the Adonis test based on one variables you want
-vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Age_category, permutations = 999)
+vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Sample.Type, permutations = 999)
 ```
 
 
@@ -172,7 +172,7 @@ vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Age_category, per
 
 ```{r, eval = F}
 # Do the Adonis test for Aitchinson based on one variables you want
-vegan::adonis2(ps_dist_matrix_clr ~ phyloseq::sample_data(ps_CLR)$Sample.Type, permutations = 999)
+vegan::adonis2(ps_dist_matrix_clr ~ phyloseq::sample_data(ps_CLR)$Island, permutations = 999)
 ```
 
 - Island
@@ -184,9 +184,11 @@ vegan::adonis2(ps_dist_matrix_clr ~ phyloseq::sample_data(ps_CLR)$Sample.Type, p
 
 ```{r, eval = F}
 # Do the Adonis test for unifrac based on one variables you want
-vegan::adonis2(ps_dist_matrix_unifrac ~ phyloseq::sample_data(ps_Norm)$Sex, permutations = 999)
+vegan::adonis2(ps_dist_matrix_unifrac ~ phyloseq::sample_data(ps_Norm)$Island, permutations = 999)
 ```
 
+- Island
+- Sample.Type
 
 #### Two or more Variable Adonis with significant p-value (Bray)
 
@@ -210,7 +212,18 @@ vegan::adonis2(ps_dist_matrix_clr ~ phyloseq::sample_data(ps_CLR)$Island + phylo
 - Island/location.numeric but not the opposite
 - Age_category still significant with calc_sex
 - Island + Sample_Type + Age_category: all significant
-  
+
+ #### Two or more Variable Adonis with significant p-value (Unifrac)
+
+```{r, eval = F}
+# The Adonis test based on two variables
+vegan::adonis2(ps_dist_matrix_unifrac ~ phyloseq::sample_data(ps_Norm)$Sample.Type + phyloseq::sample_data(ps_Norm)$Age_category, permutations = 999, by = "terms")
+```
+
+- Island/location.numeric but not the opposite
+- Island + Sample_Type: all significant
+
+
 ```{r, eval = F}
 # The Adonis test based on interation of two variables
 vegan::adonis2(ps_dist_matrix ~ phyloseq::sample_data(ps_Norm)$Island * phyloseq::sample_data(ps_Norm)$Sex, permutations = 999, by = "terms")
