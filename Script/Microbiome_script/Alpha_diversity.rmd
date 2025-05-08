@@ -20,53 +20,124 @@ load("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/H
 col_gir <- c("#a0be25", "#25be4b")
 ```
 
-## Alpha diversity plot
+## Alpha diversity bar plot
 
 Plot Alpha diversity using the three different metrics.
-
-```{r, eval = F}
-# By Samples
-plot_richness(ps_rare, x = "samples", measures = c("Observed", "Shannon", "Simpson"))
-```
-
-It is possible to separate by different categories than only Samples
-
-```{r, eval = F}
-# By Islands
-plot_richness(ps_rare, x = "Island", measures = c("Observed", "Shannon", "Simpson", color = "Island"))
-```
-```{r}
-# By Sex
-plot_richness(ps_rare, x = "Sex", measures = c("Observed", "Shannon", "Simpson"), color = "Sex")
-```
-
-```{r}
-# By Sample Type
-plot_richness(ps_rare, x = "Sample.Type", measures = c("Observed", "Shannon", "Simpson"), color = "Sample.Type")
-```
 
 ## ASV richness
 
 ### Metrics Used
 
 ```{r}
-Boxplot <- plot_richness(ps_rare_loc_above_5, measures = "Observed")
+rich <- estimate_richness(ps_rare, measures = c("Observed","Shannon","Simpson","InvSimpson"))
+
+alpha_div <- list(sample_data(ps_rare)$ID, sample_data(ps_rare)$Island, rich)
+
+pielou <- microbiome::evenness(otu_table(ps_rare), index = "pielou")
+
+alpha_div$pielou <- pielou
+
+Alpha_div_Barplot <- data.frame(alpha_div)
+
+colnames(Alpha_div_Barplot) <- c("ID", "Island", "Observed","Shannon", "Simpson", "InvSimpson", "Pielou")
+
+Alpha_div_Barplot
 ```
 
-### Plot for different variable
+### Bar Plot for Observed
+
 ```{r, eval = F}
-# Boxplot By Island
-ggplot(Boxplot$data, aes(x = Island , y = value, fill = Island)) +
-  geom_violin(alpha = 1, color = "black", lwd= 0.36, width = 0.7) +
-  geom_boxplot(width= 0.2, fill = "white") +
- #geom_boxplot(alpha = 1, color = "black", outlier.color = "white", outlier.size = 0, lwd= 0.36, width = 0.7) +
-  geom_point(position = position_jitterdodge(jitter.width = 0.35), alpha = 1, size = 1.25, color = "black", pch = 21) +
-  ylab("Richness") + xlab("Island") +
-  scale_fill_manual(values = col_gir) + 
-  scale_color_manual(values = col_gir) +
-  theme_bw() + 
-  theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
-  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank())
+# Set the same ID order as Previous plot
+Alpha_div_Barplot$ID <-
+  factor(Alpha_div_Barplot$ID,
+         levels = ID_new_levels)
+
+Observed_bar <- ggplot(data=Alpha_div_Barplot, aes(x=ID,y=Observed, fill = Island)) + 
+  geom_bar(aes(), stat="identity", position="stack")  + scale_y_log10() +
+  facet_grid(~Island, scales = "free_x", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=18),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none") +
+  labs(y="Observed [log10]      ")
+
+Observed_bar
+```
+
+```{r}
+Shannon_bar <- ggplot(data=Alpha_div_Barplot, aes(x=ID,y=Shannon, fill = Island)) + 
+  geom_bar(aes(), stat="identity", position="stack")  + scale_y_log10() +
+  facet_grid(~Island, scales = "free_x", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=18),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none") +
+  labs(y="Shannon [log10]      ")
+
+Shannon_bar
+```
+
+```{r}
+Simpson_bar <- ggplot(data=Alpha_div_Barplot, aes(x=ID,y=Simpson, fill = Island)) + 
+  geom_bar(aes(), stat="identity", position="stack")  + #scale_y_log10() +
+  facet_grid(~Island, scales = "free_x", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=18),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none") +
+  labs(y="Simpson")
+
+Simpson_bar
+```
+```{r}
+InvSimpson_bar <- ggplot(data=Alpha_div_Barplot, aes(x=ID,y=InvSimpson, fill = Island)) + 
+  geom_bar(aes(), stat="identity", position="stack")  + scale_y_log10() +
+  facet_grid(~Island, scales = "free_x", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=18),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none") +
+  labs(y="InvSimpson [log10]      ")
+
+InvSimpson_bar
+```
+
+```{r}
+Pielou_bar <- ggplot(data=Alpha_div_Barplot, aes(x=ID,y=Pielou, fill = Island)) + 
+  geom_bar(aes(), stat="identity", position="stack")  + #scale_y_log10() +
+  facet_grid(~Island, scales = "free_x", space = "free") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y=element_text(size=18),
+        axis.title.y=element_text(size=18),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        legend.position = "none") +
+  labs(y="Pielou")
+
+Pielou_bar
 ```
 
 ```{r}
@@ -562,7 +633,7 @@ ggplot(Faith_Box, aes(x = Sample.Type , y = PD, fill = Sample.Type)) +
   ylab("PD") + xlab("Sample Type") 
   #theme_bw() + 
   theme(axis.title.x = element_text(size=18, margin=margin(t=7)), axis.title.y = element_text(size=18, margin=margin(r=8)), axis.text.y = element_text(size=18, color = "black"), axis.text.x = element_text(size=18, color="black"), strip.text.x = element_blank()) + 
-  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()) +
+  theme(panel.border = element_rect(colour = "grey29"), panel.grid.minor = element_blank(), panel.grid.major = element_blank()
   #scale_fill_manual(values = color_list[c(6,4,8)]) + 
   #scale_color_manual(values = color_list)
 

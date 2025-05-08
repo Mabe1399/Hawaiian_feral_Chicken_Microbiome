@@ -103,7 +103,7 @@ colnames(Chicken_microbiome_Norm_phenotype_Community)[1] <- "ID"
 ```{r}
 # Plot histograms of center log transformed Relative abundances
 par(mfrow = c(3, 3))
-for (i in 10:18) {
+for (i in 10:83) {
     hist(Chicken_microbiome_phenotype_complete[, i], main = colnames(Chicken_microbiome_phenotype_complete)[i], col = "lightblue", xlab = "Center log values")
 }
 

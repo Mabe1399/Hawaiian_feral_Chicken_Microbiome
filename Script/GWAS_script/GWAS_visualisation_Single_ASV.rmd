@@ -4,12 +4,13 @@ This is gonna be used to visualise the output of different GWAS Analysis from Si
 ```{r}
 library(qqman)
 library(dplyr)
+library(tidyr)
 ```
 
 
 ## Import the Manhattan function of Willlian
 ```{r, eval = F}
-# Import form Willian github
+# Import from Willian github
 source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-plot_manhattan.R")
 ```
 
@@ -18,6 +19,9 @@ source("https://github.com/williantafsilva/scripts/raw/refs/heads/main/function-
 # Import the GEMMA output for different trait
 GWAS_output_ASV40 <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Single_ASV/ASV40/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_clr-job9193317._CLR_GWAS-job9295735.assoc.txt")
 GWAS_output_ASV1 <- read.delim("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/Single_ASV/ASV1/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink.geno_microbiome_clr-job9193317._CLR_GWAS-job9282069.assoc.txt")
+
+# Import Data from MatrixEQTL
+Matrix_QTL_output <- read.table("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/GWAS/MatrixQTL/matrixqtl-FDR-job9960836.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 ```
 
 
@@ -99,15 +103,15 @@ manhattan(GWAS_output_ASV1, chr = "chr", bp = "ps", snp = "rs", p = "p_score", l
 ```{r}
 # Use Willian Manhattan plot function
 plot_manhattan(
-  chrnamevector = GWAS_output_ASV1$chr,
-  chrpositionvector = GWAS_output_ASV1$ps,
-  values = -log10(GWAS_output_ASV1$p_score_BH),
+  chrnamevector = Matrix_QTL_output$CHR,
+  chrpositionvector = Matrix_QTL_output$BP,
+  values = -log10(Matrix_QTL_output$FDR),
   abovethreshold = -log10(0.05),
   belowthreshold = -Inf,
   colors = c("blue", "red"),
   xlabel = "Chromosome",
   ylabel = "LogPvalue",
-  plottitle = "Manhattan plot for ASV1"
+  plottitle = "Manhattan plot"
 )
 ```
 

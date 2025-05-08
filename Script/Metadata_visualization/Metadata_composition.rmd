@@ -202,7 +202,7 @@ corrplot(Spearman, method = "number", type = "lower", diag = FALSE)
 Genome_eigenvec <- read.table("/Users/matiasbeckerburgos/Desktop/Master_in_Bioinformatics/Master_Thesis/Hawaiian_feral_Chicken_Microbiome/Analysis/PLINK/PCA/cc5k.autosomes.selectFERAL.renamesamples.minimize.vcftoplink-job9079824.PCA-job9667882.eigenvec", header = FALSE)
 
 # Create a plot to visualize the genomic PCA
-ggplot(data = Metadata_cleaned_microbiome, aes(x = PC1, y = PC2, fill = sex_calc_numeric)) +
+ggplot(data = Metadata_cleaned_microbiome, aes(x = PC1, y = PC2, fill = Island)) +
       theme_bw() +
       #stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
       geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) 

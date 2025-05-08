@@ -34,16 +34,14 @@ ps_Norm_F <- microbiome::add_besthit(ps_Norm)
 ## Core Microbiota vizualisation
 ```{r, eval =  F}
 # With compositional (relative) abundances total
-det <- round(10^seq(log10(0.001), log10(.3), length = 15), 3)
-prevalences <- seq(.05, 1, .05)
-
-plot_core(ps_Norm_F,
+det <- 50
+prevalences <- c(50, 85)
+plot_core(transform(ps_Genus, "compositional"),
   prevalences = prevalences,
   detections = det, plot.type = "lineplot"
 ) +
   xlab("Relative Abundance (%)") +
   theme_bw()
-
 # Separate the two population
 plot_core(subset_samples(ps_Norm_F, Island == "Bahamas"),
   prevalences = prevalences,

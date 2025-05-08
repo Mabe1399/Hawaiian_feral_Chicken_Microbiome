@@ -8,8 +8,8 @@ Obviously multiple Metrics can be used like Bray-Curtis, Aitchinson, Jaccard, et
 
 ```{r}
 # Library
-library("plyr")
-packageVersion("plyr")
+library("dplyr")
+packageVersion("dplyr")
 library(ggplot2)
 ```
 
@@ -96,183 +96,56 @@ ggplot(g, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
       scale_fill_manual(values = col_gir)
 ```
 
-## PCoA Plot Using Bray-Curtis (Sex)
+## PCoA Plot Using Bray-Curtis (Island) + Bacteroides Abundance
 
 ```{r}
-col_gir <- c("#a0be25", "#25be4b")
-
-names(col_gir) <- c("Male", "Female")
 
 ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
 g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
 head(g)
 
+Agglom_Genus <- tax_glom(ps, taxrank = "Genus")
+Agglom_Genus <- transform_sample_counts(Agglom_Genus, function(x) x/sum(x))
+Relative_Genus <- psmelt(Agglom_Genus)
+
+Bacteroides_Abundance <- Relative_Genus[Relative_Genus$Genus == "Bacteroides",]
+
+# Merge the two Data
+g <- merge(g, Bacteroides_Abundance[,c("ID", "Abundance")], by = "ID")
 # extract % variation
 tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
 tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
 set.seed(386)
 
-# pcoa plot Giraffe Species
-ggplot(g, aes(x = Axis.1, y = Axis.2, color = Sex, fill = Sex)) +
-      theme_bw() +
-      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
-      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+# pcoa plot 
+ggplot(g, aes(x = Axis.1, y = Axis.2, colour = Abundance)) +
+      geom_point(size=2.5, stroke=0.3, alpha=0.75, aes(shape=Island)) +
+      stat_ellipse(mapping = aes(fill= Island), geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
       xlab(paste0("PC1 (", tempx, "%)")) +
       ylab(paste0("PC2 (", tempy, "%)")) +
+      geom_vline(xintercept = 0, linetype = "dashed") + 
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      scale_color_gradient(high = "blue", low = "red", name="Bacteroides Abundance",
+                        labels=c("Low","High"), breaks = c(min(g$Abundance), max(g$Abundance))) +
       theme(
             axis.title.x = element_text(size = 13, margin = margin(t = 3)),
             axis.title.y = element_text(size = 13, margin = margin(r = 2)),
             axis.text.y = element_text(size = 11, color = "black"),
             axis.text.x = element_text(size = 11, color = "black"),
-            strip.text = element_text(size = 13)
-      ) +
-      theme(
+            axis.line.x=element_line(color="black",size=0.2,linetype=1),
+            axis.line.y=element_line(color="black",size=0.2,linetype=1),
+            strip.text = element_text(size = 13),
             panel.grid.minor = element_blank(),
             panel.grid.major = element_blank(),
-            panel.border = element_rect(colour = "grey29")
-      ) +
-      theme(
-            legend.title = element_text(size = 13),
-            legend.text = element_text(size = 13),
+            panel.background = element_blank(),
             legend.key.size = unit(0.6, "cm"),
-            legend.position = "right"
-      ) +
-      scale_color_manual(values = col_gir) +
-      scale_fill_manual(values = col_gir)
+            legend.box.background = element_rect(),
+            legend.box.margin = margin(6, 6, 6, 6),
+            legend.text = element_text(size=11),
+            legend.title = element_text(face="bold", size = 11),
+            legend.position = "bottom") #+ guides(color = guide_legend(order = 1)) 
 ```
 
-## PCoA Plot Using Bray-Curtis (Sample Type)
-
-```{r}
-col_gir <- c("#a0be25", "#25be4b")
-
-names(col_gir) <- c("Cecum", "Scrape")
-
-ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
-g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
-head(g)
-
-# extract % variation
-tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
-tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
-set.seed(386)
-
-# pcoa plot
-ggplot(g, aes(x = Axis.1, y = Axis.2, color = Sample.Type, fill = Sample.Type)) +
-      theme_bw() +
-      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
-      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
-      xlab(paste0("PC1 (", tempx, "%)")) +
-      ylab(paste0("PC2 (", tempy, "%)")) +
-      theme(
-            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
-            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
-            axis.text.y = element_text(size = 11, color = "black"),
-            axis.text.x = element_text(size = 11, color = "black"),
-            strip.text = element_text(size = 13)
-      ) +
-      theme(
-            panel.grid.minor = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.border = element_rect(colour = "grey29")
-      ) +
-      theme(
-            legend.title = element_text(size = 13),
-            legend.text = element_text(size = 13),
-            legend.key.size = unit(0.6, "cm"),
-            legend.position = "right"
-      ) +
-      scale_color_manual(values = col_gir) +
-      scale_fill_manual(values = col_gir)
-```
-
-## PCoA Plot Using Bray-Curtis (location)
-
-```{r}
-ps_Norm_w_5_ind <- subset_samples(ps_Norm, ID %in% Metadata_loc_above_5_ind$ID)
-
-ord_ps <- ordinate(ps_Norm_w_5_ind, "PCoA", "bray")
-g <- plot_ordination(ps_Norm_w_5_ind, ord_ps, justDF = T)
-head(g)
-
-# extract % variation
-tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
-tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
-set.seed(386)
-
-# pcoa plot
-ggplot(g, aes(x = Axis.1, y = Axis.2, color = location.numeric, fill = location.numeric)) +
-      theme_bw() +
-      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
-      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
-      xlab(paste0("PC1 (", tempx, "%)")) +
-      ylab(paste0("PC2 (", tempy, "%)")) +
-      # facet_wrap(~Island, scales = "free") +
-      theme(
-            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
-            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
-            axis.text.y = element_text(size = 11, color = "black"),
-            axis.text.x = element_text(size = 11, color = "black"),
-            strip.text = element_text(size = 13)
-      ) +
-      theme(
-            panel.grid.minor = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.border = element_rect(colour = "grey29")
-      ) +
-      theme(
-            legend.title = element_text(size = 13),
-            legend.text = element_text(size = 13),
-            legend.key.size = unit(0.6, "cm"),
-            legend.position = "right"
-      )
-# scale_color_manual(values = col_gir) +
-# scale_fill_manual(values = col_gir)
-```
-
-## PCoA Plot Using Bray-Curtis (Age Category)
-```{r}
-col_gir <- c("#a0be25", "#25be4b")
-
-names(col_gir) <- c("Juvenile", "Adult")
-
-ord_ps <- ordinate(ps_Norm, "PCoA", "bray")
-g <- plot_ordination(ps_Norm, ord_ps, justDF = T)
-head(g)
-
-# extract % variation
-tempx <- as.character(round(ord_ps$values$Relative_eig[1], 3) * 100)
-tempy <- as.character(round(ord_ps$values$Relative_eig[2], 3) * 100)
-set.seed(386)
-
-# pcoa plot
-ggplot(g, aes(x = Axis.1, y = Axis.2, color = Age_category, fill = Age_category)) +
-      theme_bw() +
-      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
-      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
-      xlab(paste0("PC1 (", tempx, "%)")) +
-      ylab(paste0("PC2 (", tempy, "%)")) +
-      theme(
-            axis.title.x = element_text(size = 13, margin = margin(t = 3)),
-            axis.title.y = element_text(size = 13, margin = margin(r = 2)),
-            axis.text.y = element_text(size = 11, color = "black"),
-            axis.text.x = element_text(size = 11, color = "black"),
-            strip.text = element_text(size = 13)
-      ) +
-      theme(
-            panel.grid.minor = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.border = element_rect(colour = "grey29")
-      ) +
-      theme(
-            legend.title = element_text(size = 13),
-            legend.text = element_text(size = 13),
-            legend.key.size = unit(0.6, "cm"),
-            legend.position = "right"
-      ) +
-      scale_color_manual(values = col_gir) +
-      scale_fill_manual(values = col_gir)
-```
 
 ## PCoA Plot using wheighted Unifrac (Island)
 
@@ -319,7 +192,7 @@ ggplot(g, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
       scale_fill_manual(values = col_gir)
 ```
 
-## PCoA plot using Aitchinson (Island)
+## PCoA plot using Aitchinson (Island) + Bacteroides Abundance
 
 ### Conversion to CLR values
 ```{r}
@@ -335,36 +208,45 @@ ord_clr <- ordinate(ps_CLR, "PCoA", "euclidean")
 PCA_aitch <- plot_ordination(ps_CLR, ord_clr, justDF = T)
 head(PCA_aitch)
 
+Agglom_Genus_clr <- tax_glom(ps, taxrank = "Genus")
+Agglom_Genus_clr <- transform(Agglom_Genus_clr, "clr")
+Relative_Genus_clr <- psmelt(Agglom_Genus_clr)
+
+Bacteroides_clr <- Relative_Genus_clr[Relative_Genus_clr$Genus == "Bacteroides",]
+# Merge the two Data
+PCA_aitch <- merge(PCA_aitch, Bacteroides_clr[,c("ID", "Abundance")], by = "ID")
+
 # extract % variation
 tempx <- as.character(round(ord_clr$values$Relative_eig[1], 3) * 100)
 tempy <- as.character(round(ord_clr$values$Relative_eig[2], 3) * 100)
 set.seed(386)
 
 # pcoa plot Giraffe Species
-ggplot(PCA_aitch, aes(x = Axis.1, y = Axis.2, color = Island, fill = Island)) +
-      theme_bw() +
-      stat_ellipse(geom = "polygon", type = "t", alpha = 0.2, level = 0.95) + # confidence interval
-      geom_point(color = "black", shape = 21, size = 2.5, stroke = 0.3) +
+ggplot(PCA_aitch, aes(x = Axis.1, y = Axis.2, colour = Abundance)) +
+      geom_point(size=2.5, stroke=0.3, alpha=0.75, aes(shape=Island)) +
+      stat_ellipse(mapping = aes(fill= Island), geom = "polygon", type = "t", alpha = 0.2, level = 0.9) + # confidence interval
       xlab(paste0("PC1 (", tempx, "%)")) +
       ylab(paste0("PC2 (", tempy, "%)")) +
+      geom_vline(xintercept = 0, linetype = "dashed") + 
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      scale_color_gradient(high = "blue", low = "red", name="Bacteroides Abundance",
+                        labels=c("Low","High"), 
+                        breaks = c(min(PCA_aitch$Abundance),max(PCA_aitch$Abundance))) +
       theme(
             axis.title.x = element_text(size = 13, margin = margin(t = 3)),
             axis.title.y = element_text(size = 13, margin = margin(r = 2)),
             axis.text.y = element_text(size = 11, color = "black"),
             axis.text.x = element_text(size = 11, color = "black"),
-            strip.text = element_text(size = 13)
-      ) +
-      theme(
+            axis.line.x=element_line(color="black",size=0.2,linetype=1),
+            axis.line.y=element_line(color="black",size=0.2,linetype=1),
+            strip.text = element_text(size = 13),
             panel.grid.minor = element_blank(),
             panel.grid.major = element_blank(),
-            panel.border = element_rect(colour = "grey29")
-      ) +
-      theme(
-            legend.title = element_text(size = 13),
-            legend.text = element_text(size = 13),
+            panel.background = element_blank(),
             legend.key.size = unit(0.6, "cm"),
-            legend.position = "right"
-      ) +
-      scale_color_manual(values = col_gir) +
-      scale_fill_manual(values = col_gir)
+            legend.box.background = element_rect(),
+            legend.box.margin = margin(6, 6, 6, 6),
+            legend.text = element_text(size=11),
+            legend.title = element_text(face="bold", size = 11),
+            legend.position = "bottom") #+ guides(color = guide_legend(order = 1)) 
 ```
